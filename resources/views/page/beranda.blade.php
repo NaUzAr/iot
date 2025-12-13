@@ -516,58 +516,68 @@
                         tanaman secara real-time untuk hasil panen yang optimal.
                     </p>
 
-                    <div class="d-flex flex-wrap gap-3 mb-5">
-                        <a href="#" class="btn btn-gradient">
+                    <div class="d-flex flex-wrap gap-3 mb-4">
+                        <a href="@auth {{ route('monitoring.index') }} @else {{ route('login') }} @endauth"
+                            class="btn btn-gradient">
                             <i class="bi bi-graph-up-arrow me-2"></i>Lihat Data Live
                         </a>
-                        <a href="#" class="btn btn-glass">
-                            <i class="bi bi-download me-2"></i>Download Laporan
+                        <a href="#contact" class="btn btn-glass">
+                            <i class="bi bi-envelope me-2"></i>Contact Us
                         </a>
-                    </div>
-
-                    <!-- Features -->
-                    <div class="feature-card d-flex align-items-center">
-                        <div class="feature-icon-box temp">🌡️</div>
-                        <div>
-                            <h6 class="feature-title">Sensor Suhu & Kelembaban</h6>
-                            <p class="feature-desc">Monitoring suhu udara dan kelembaban lahan</p>
-                        </div>
-                    </div>
-
-                    <div class="feature-card d-flex align-items-center">
-                        <div class="feature-icon-box rain">🌧️</div>
-                        <div>
-                            <h6 class="feature-title">Deteksi Curah Hujan</h6>
-                            <p class="feature-desc">Prediksi cuaca untuk perencanaan tanam</p>
-                        </div>
-                    </div>
-
-                    <div class="feature-card d-flex align-items-center">
-                        <div class="feature-icon-box wind">🌱</div>
-                        <div>
-                            <h6 class="feature-title">Kelembaban & pH Tanah</h6>
-                            <p class="feature-desc">Monitoring kesehatan tanah secara real-time</p>
-                        </div>
-                    </div>
-
-                    <div class="feature-card d-flex align-items-center">
-                        <div class="feature-icon-box wifi">📡</div>
-                        <div>
-                            <h6 class="feature-title">Konektivitas MQTT</h6>
-                            <p class="feature-desc">Data terkirim otomatis ke cloud server</p>
-                        </div>
                     </div>
                 </div>
 
                 <div class="col-lg-6">
-                    <div class="device-image-container text-center">
-                        <div class="device-glow"></div>
-                        <img src="https://www.renkeer.com/wp-content/uploads/2021/06/weather-station-3-600x600.jpg"
-                            class="img-fluid device-image" alt="IoT Weather Station Device" style="max-width: 450px;">
-                        <p class="text-white-50 mt-3 fst-italic">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Smart Agriculture Monitoring System V.2.0
-                        </p>
+                    <!-- Product Carousel -->
+                    <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            <!-- AWS Slide -->
+                            <div class="carousel-item active">
+                                <div class="device-image-container text-center">
+                                    <div class="device-glow"></div>
+                                    <img src="https://www.renkeer.com/wp-content/uploads/2021/06/weather-station-3-600x600.jpg"
+                                        class="img-fluid device-image" alt="AWS Device" style="max-width: 400px;">
+                                    <div class="glass-card mt-3 p-3 mx-auto" style="max-width: 400px;">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h5 class="text-white fw-bold mb-0">☁️ AWS</h5>
+                                            <span class="badge bg-info">Outdoor</span>
+                                        </div>
+                                        <p class="text-white-50 small mb-0">Automatic Weather Station - Monitoring cuaca
+                                            luar ruangan</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Smart GH Slide -->
+                            <div class="carousel-item">
+                                <div class="device-image-container text-center">
+                                    <div class="device-glow" style="background: var(--secondary-gradient);"></div>
+                                    <img src="https://www.renkeer.com/wp-content/uploads/2021/06/weather-station-3-600x600.jpg"
+                                        class="img-fluid device-image" alt="Smart Greenhouse" style="max-width: 400px;">
+                                    <div class="glass-card mt-3 p-3 mx-auto" style="max-width: 400px;">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h5 class="text-white fw-bold mb-0">🌱 Smart GH</h5>
+                                            <span class="badge bg-success">Indoor</span>
+                                        </div>
+                                        <p class="text-white-50 small mb-0">Smart Greenhouse - Monitoring rumah kaca &
+                                            hidroponik</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Carousel Indicators -->
+                        <div class="carousel-indicators" style="bottom: -40px;">
+                            <button type="button" data-bs-target="#productCarousel" data-bs-slide-to="0"
+                                class="active"></button>
+                            <button type="button" data-bs-target="#productCarousel" data-bs-slide-to="1"></button>
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel"
+                            data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#productCarousel"
+                            data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -597,16 +607,119 @@
                                 <div class="stat-label">Response Time</div>
                         </div>
                     </div>
+    </section>
+
+    <!-- Contact Us Section -->
+    <section class="py-5" id="contact">
+        <div class="container">
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-5">
+                    <h2 class="text-white fw-bold mb-3">
+                        <i class="bi bi-envelope-heart me-2"></i>Hubungi Kami
+                    </h2>
+                    <p class="text-white-50 mb-4">
+                        Tertarik dengan produk monitoring IoT kami? Hubungi tim kami untuk konsultasi gratis
+                        dan penawaran terbaik.
+                    </p>
+
+                    <div class="glass-card p-4 mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="feature-icon-box rain" style="width: 50px; height: 50px;">
+                                <i class="bi bi-whatsapp text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-white mb-0">WhatsApp</h6>
+                                <p class="text-white-50 small mb-0">+62 812-3456-7890</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-4 mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="feature-icon-box wifi" style="width: 50px; height: 50px;">
+                                <i class="bi bi-envelope text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-white mb-0">Email</h6>
+                                <p class="text-white-50 small mb-0">info@smartagri.id</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="feature-icon-box temp" style="width: 50px; height: 50px;">
+                                <i class="bi bi-geo-alt text-white"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-white mb-0">Lokasi</h6>
+                                <p class="text-white-50 small mb-0">Jakarta, Indonesia</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="glass-card p-4">
+                        <h5 class="text-white mb-4"><i class="bi bi-chat-dots me-2"></i>Kirim Pesan</h5>
+                        <form action="#" method="POST">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Nama Lengkap</label>
+                                    <input type="text" class="form-control bg-dark text-white border-secondary"
+                                        placeholder="Nama Anda" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Email</label>
+                                    <input type="email" class="form-control bg-dark text-white border-secondary"
+                                        placeholder="email@example.com" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">No. WhatsApp</label>
+                                    <input type="tel" class="form-control bg-dark text-white border-secondary"
+                                        placeholder="08xxxxxxxxxx" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-white-50 small">Produk yang Diminati</label>
+                                    <select class="form-select bg-dark text-white border-secondary">
+                                        <option value="AWS">AWS (Automatic Weather Station)</option>
+                                        <option value="Smart GH">Smart GH (Smart Greenhouse)</option>
+                                        <option value="Keduanya">Keduanya</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label text-white-50 small">Pesan</label>
+                                    <textarea class="form-control bg-dark text-white border-secondary" rows="4"
+                                        placeholder="Tuliskan kebutuhan Anda..."></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-gradient w-100">
+                                        <i class="bi bi-send me-2"></i>Kirim Pesan
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
+        </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer-glass">
-        <div class="container text-center">
-            <p class="footer-text">
-                © 2025 <a href="#" class="footer-link">Smart Agriculture</a> - Tim Engineering IoT Pertanian
-            </p>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                    <p class="footer-text mb-0">
+                        © 2025 <a href="#" class="footer-link">Smart Agriculture</a> - Tim Engineering IoT Pertanian
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#contact" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-envelope me-1"></i> Contact Us
+                    </a>
+                </div>
+            </div>
         </div>
     </footer>
 
