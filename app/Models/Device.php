@@ -10,7 +10,15 @@ class Device extends Model
     use HasFactory;
 
     // Izinkan kolom ini diisi
-    protected $fillable = ['name', 'type', 'mqtt_topic', 'token', 'table_name'];
+    protected $fillable = [
+        'name',
+        'type',
+        'mqtt_topic',
+        'token',
+        'table_name',
+        'max_time_schedules',
+        'max_sensor_automations'
+    ];
 
     /**
      * Relasi ke DeviceSensor (satu device punya banyak sensor)
@@ -26,6 +34,43 @@ class Device extends Model
     public function outputs()
     {
         return $this->hasMany(DeviceOutput::class);
+    }
+
+    /**
+     * Relasi ke OutputAutomationConfig (satu device punya banyak automation configs)
+     */
+    public function automationConfigs()
+    {
+        return $this->hasManyThrough(
+            OutputAutomationConfig::class,
+            DeviceOutput::class,
+            'device_id',
+            'device_output_id'
+        );
+    }
+
+    /**
+     * Check if device can add more time-based schedules
+     */
+    public function canAddTimeSchedule(): bool
+    {
+        $currentCount = $this->automationConfigs()
+            ->where('automation_type', 'time')
+            ->count();
+
+        return $currentCount < $this->max_time_schedules;
+    }
+
+    /**
+     * Check if device can add more sensor-based automations
+     */
+    public function canAddSensorAutomation(): bool
+    {
+        $currentCount = $this->automationConfigs()
+            ->where('automation_type', 'sensor')
+            ->count();
+
+        return $currentCount < $this->max_sensor_automations;
     }
 
     /**

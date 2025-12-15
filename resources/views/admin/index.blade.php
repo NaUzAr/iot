@@ -262,9 +262,14 @@
             <h2 class="page-title mb-0">
                 <i class="bi bi-cpu-fill me-2"></i>Device Management
             </h2>
-            <a href="{{ route('admin.device.create') }}" class="btn btn-gradient">
-                <i class="bi bi-plus-lg me-1"></i> Tambah Device
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.mqtt-tester.index') }}" class="btn btn-glass">
+                    <i class="bi bi-broadcast me-1"></i> MQTT Tester
+                </a>
+                <a href="{{ route('admin.device.create') }}" class="btn btn-gradient">
+                    <i class="bi bi-plus-lg me-1"></i> Tambah Device
+                </a>
+            </div>
         </div>
 
         @if(session('success'))
@@ -486,6 +491,15 @@ client.publish("sensor/device/data", json.dumps(data))</code></pre>
                     <li>Pastikan <strong>token</strong> device sudah benar agar data tersimpan ke database</li>
                     <li>Nama sensor/output di JSON harus sama persis dengan yang dikonfigurasi di device</li>
                 </ul>
+
+                <div class="mt-3 d-flex gap-2">
+                    <a href="{{ route('documentation.esp32') }}" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-cpu me-1"></i> Panduan ESP32
+                    </a>
+                    <a href="{{ route('documentation.mqtt') }}" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-book me-1"></i> MQTT Protocol Docs
+                    </a>
+                </div>
             </div>
         </div>
     </div>

@@ -23,7 +23,7 @@ class MqttListener extends Command
     /**
      * The console command description.
      */
-    protected $description = 'Listen to MQTT broker for sensor data and store to database';
+    protected $description = 'Listen to MQTT broker for sensor data and device status';
 
     /**
      * Execute the console command.
@@ -84,6 +84,12 @@ class MqttListener extends Command
                 }, 0);
             }
 
+            // Subscribe to device status topic (device-as-master)
+            $this->info("📡 Subscribed to: devices/+/status (Device Status)");
+            $mqtt->subscribe('devices/+/status', function ($topic, $message) {
+                $this->processDeviceStatus($topic, $message);
+            }, 1);
+
             $this->info("");
             $this->info("👂 Listening for messages... (Press Ctrl+C to stop)");
             $this->info("─────────────────────────────────────────────────");
@@ -101,7 +107,7 @@ class MqttListener extends Command
     }
 
     /**
-     * Process incoming MQTT message
+     * Process incoming MQTT message (sensor data)
      */
     private function processMessage($topic, $message)
     {
@@ -161,6 +167,67 @@ class MqttListener extends Command
         } catch (\Exception $e) {
             $this->error("           ❌ Error: " . $e->getMessage());
             Log::error('MQTT Process Error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Process device status message (device-as-master architecture)
+     * Device sends its output states and schedules, web only displays
+     */
+    private function processDeviceStatus($topic, $message)
+    {
+        $timestamp = now()->format('H:i:s');
+        $this->line("");
+        $this->line("[{$timestamp}] 🔔 Device Status Received!");
+        $this->line("           Topic: {$topic}");
+
+        try {
+            $data = json_decode($message, true);
+
+            if (!$data) {
+                $this->warn("           ⚠️  Invalid JSON format");
+                return;
+            }
+
+            $token = $data['token'] ?? 'unknown';
+
+            // Find device by token
+            $device = Device::where('token', $token)->first();
+            $deviceName = $device ? $device->name : "Unknown Device";
+
+            $this->info("           📱 Device: {$deviceName} ({$token})");
+
+            // Display outputs
+            if (isset($data['outputs']) && is_array($data['outputs'])) {
+                $this->line("           📊 Output States:");
+                foreach ($data['outputs'] as $name => $output) {
+                    $value = is_array($output) ? ($output['value'] ?? 0) : $output;
+                    $label = is_array($output) ? ($output['label'] ?? $name) : $name;
+                    $status = $value ? "ON 🟢" : "OFF 🔴";
+                    $this->line("              • {$label}: {$status}");
+                }
+            }
+
+            // Display sensor values
+            if (isset($data['sensors']) && is_array($data['sensors'])) {
+                $this->line("           🌡️ Sensor Values:");
+                foreach ($data['sensors'] as $name => $value) {
+                    $this->line("              • {$name}: {$value}");
+                }
+            }
+
+            // Display schedules count
+            if (isset($data['schedules']) && is_array($data['schedules'])) {
+                $count = count($data['schedules']);
+                $enabled = count(array_filter($data['schedules'], fn($s) => $s['enabled'] ?? true));
+                $this->line("           📅 Schedules: {$count} total, {$enabled} enabled");
+            }
+
+            $this->info("           ✅ Status received (not saved - device is master)");
+
+        } catch (\Exception $e) {
+            $this->error("           ❌ Error: " . $e->getMessage());
+            Log::error('MQTT Device Status Error: ' . $e->getMessage());
         }
     }
 }

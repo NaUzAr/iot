@@ -273,6 +273,10 @@
             padding: 1.25rem;
             text-align: center;
             transition: all 0.3s ease;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .output-card:hover {
@@ -426,9 +430,6 @@
                 <button type="button" class="btn-glass" data-bs-toggle="modal" data-bs-target="#exportModal">
                     <i class="bi bi-download me-1"></i> Download CSV
                 </button>
-                <a href="{{ route('monitoring.index') }}" class="btn-glass">
-                    <i class="bi bi-grid me-1"></i> Semua Device
-                </a>
             </div>
         </div>
 
@@ -457,61 +458,71 @@
                     </div>
                 @endforeach
             </div>
+        @endif
 
-            @if($outputs->count() > 0)
-                <!-- Output Control Panel -->
-                <div class="glass-card"
-                    style="background: rgba(250, 204, 21, 0.05); border-color: rgba(250, 204, 21, 0.2); margin-top: 1.5rem;">
-                    <h5 class="card-title" style="color: #fde047;">
-                        <i class="bi bi-sliders me-2"></i>Kontrol Output
-                    </h5>
-                    <div class="row g-3 mt-2">
-                        @foreach($outputs as $output)
-                            <div class="col-6 col-md-4 col-lg-3">
-                                <div class="output-card" id="output-card-{{ $output->id }}">
-                                    <div class="output-icon">
-                                        <i class="bi bi-toggle-on text-white"></i>
+        @if($outputs->count() > 0)
+            <!-- Output Control Panel -->
+            <div class="glass-card"
+                style="background: rgba(250, 204, 21, 0.05); border-color: rgba(250, 204, 21, 0.2); margin-top: 1.5rem;">
+                <h5 class="card-title" style="color: #fde047;">
+                    <i class="bi bi-sliders me-2"></i>Kontrol Output
+                </h5>
+                <div class="row g-3 mt-2">
+                    @foreach($outputs as $output)
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <div class="output-card" id="output-card-{{ $output->id }}">
+                                <div class="output-icon">
+                                    <i class="bi bi-toggle-on text-white"></i>
+                                </div>
+                                <div class="output-label">{{ $output->output_label }}</div>
+
+                                @if($output->output_type === 'boolean')
+                                    <!-- Toggle Switch for Boolean -->
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="output-{{ $output->id }}" data-output-id="{{ $output->id }}"
+                                            data-output-type="boolean" {{ $output->current_value ? 'checked' : '' }}
+                                            onchange="toggleOutput({{ $output->id }}, this.checked)">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <div class="output-status {{ $output->current_value ? 'on' : 'off' }}"
+                                        id="output-status-{{ $output->id }}">
+                                        {{ $output->current_value ? 'ON' : 'OFF' }}
                                     </div>
-                                    <div class="output-label">{{ $output->output_label }}</div>
+                                @else
+                                    <!-- Range Slider for Number/Percentage -->
+                                    <div class="range-value" id="output-value-{{ $output->id }}">
+                                        {{ (int) $output->current_value }}{{ $output->unit }}
+                                    </div>
+                                    <input type="range" class="range-slider mt-2" id="output-{{ $output->id }}"
+                                        data-output-id="{{ $output->id }}" data-output-type="{{ $output->output_type }}" min="0"
+                                        max="{{ $output->output_type === 'percentage' ? 100 : 180 }}"
+                                        value="{{ (int) $output->current_value }}"
+                                        oninput="updateRangeValue({{ $output->id }}, this.value, '{{ $output->unit }}')"
+                                        onchange="toggleOutput({{ $output->id }}, this.value)">
+                                    <div class="output-status on mt-1">
+                                        {{ $output->output_type === 'percentage' ? '0-100%' : '0-180°' }}
+                                    </div>
+                                @endif
 
-                                    @if($output->output_type === 'boolean')
-                                        <!-- Toggle Switch for Boolean -->
-                                        <label class="toggle-switch">
-                                            <input type="checkbox" id="output-{{ $output->id }}" data-output-id="{{ $output->id }}"
-                                                data-output-type="boolean" {{ $output->current_value ? 'checked' : '' }}
-                                                onchange="toggleOutput({{ $output->id }}, this.checked)">
-                                            <span class="toggle-slider"></span>
-                                        </label>
-                                        <div class="output-status {{ $output->current_value ? 'on' : 'off' }}"
-                                            id="output-status-{{ $output->id }}">
-                                            {{ $output->current_value ? 'ON' : 'OFF' }}
-                                        </div>
+                                {{-- Always reserve space for button to maintain consistent card height --}}
+                                <div class="mt-2">
+                                    @if($output->automation_mode !== 'none')
+                                        <a href="{{ route('schedule.index', [$userDevice->id, $output->id]) }}"
+                                            class="btn btn-sm btn-outline-light w-100" style="font-size: 0.75rem;">
+                                            <i class="bi bi-calendar-check"></i> Schedule
+                                        </a>
                                     @else
-                                        <!-- Range Slider for Number/Percentage -->
-                                        <div class="range-value" id="output-value-{{ $output->id }}">
-                                            {{ (int) $output->current_value }}{{ $output->unit }}</div>
-                                        <input type="range" class="range-slider mt-2" id="output-{{ $output->id }}"
-                                            data-output-id="{{ $output->id }}" data-output-type="{{ $output->output_type }}" min="0"
-                                            max="{{ $output->output_type === 'percentage' ? 100 : 180 }}"
-                                            value="{{ (int) $output->current_value }}"
-                                            oninput="updateRangeValue({{ $output->id }}, this.value, '{{ $output->unit }}')"
-                                            onchange="toggleOutput({{ $output->id }}, this.value)">
-                                        <div class="output-status on mt-1">
-                                            {{ $output->output_type === 'percentage' ? '0-100%' : '0-180°' }}</div>
+                                        <div style="height: 31px;"></div>
                                     @endif
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
-                    <div class="alert mt-3 mb-0 py-2"
-                        style="background: rgba(250, 204, 21, 0.1); border: 1px dashed rgba(250, 204, 21, 0.3); border-radius: 10px;">
-                        <small style="color: #fde047;"><i class="bi bi-info-circle me-1"></i>
-                            Perintah akan dikirim ke device via MQTT topic: <code>{{ $device->mqtt_topic }}/control</code>
-                        </small>
-                    </div>
+                        </div>
+                    @endforeach
                 </div>
-            @endif
+            </div>
+        @endif
 
+        @if($latestData)
             <!-- Tabs -->
             @php
                 $isTableActive = request()->has('page');
@@ -769,7 +780,7 @@
         // Toggle output (AJAX)
         function toggleOutput(outputId, value) {
             const url = `/monitoring/device/${userDeviceId}/output/${outputId}/toggle`;
-            
+
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -778,36 +789,36 @@
                 },
                 body: JSON.stringify({ value: value })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Update status text for boolean
-                    const statusEl = document.getElementById(`output-status-${outputId}`);
-                    if (statusEl) {
-                        const isOn = data.new_value == 1 || data.new_value === true;
-                        statusEl.textContent = isOn ? 'ON' : 'OFF';
-                        statusEl.className = isOn ? 'output-status on' : 'output-status off';
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update status text for boolean
+                        const statusEl = document.getElementById(`output-status-${outputId}`);
+                        if (statusEl) {
+                            const isOn = data.new_value == 1 || data.new_value === true;
+                            statusEl.textContent = isOn ? 'ON' : 'OFF';
+                            statusEl.className = isOn ? 'output-status on' : 'output-status off';
+                        }
+
+                        // Show success feedback
+                        const card = document.getElementById(`output-card-${outputId}`);
+                        if (card) {
+                            card.style.borderColor = '#22c55e';
+                            setTimeout(() => {
+                                card.style.borderColor = 'rgba(250, 204, 21, 0.3)';
+                            }, 500);
+                        }
+
+                        console.log('Output updated:', data.message);
+                    } else {
+                        console.error('Failed to update output');
+                        alert('Gagal mengupdate output. Silakan coba lagi.');
                     }
-                    
-                    // Show success feedback
-                    const card = document.getElementById(`output-card-${outputId}`);
-                    if (card) {
-                        card.style.borderColor = '#22c55e';
-                        setTimeout(() => {
-                            card.style.borderColor = 'rgba(250, 204, 21, 0.3)';
-                        }, 500);
-                    }
-                    
-                    console.log('Output updated:', data.message);
-                } else {
-                    console.error('Failed to update output');
-                    alert('Gagal mengupdate output. Silakan coba lagi.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat mengupdate output.');
-            });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat mengupdate output.');
+                });
         }
 
         // Update range value display

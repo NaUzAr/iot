@@ -133,16 +133,20 @@ class AdminDeviceController extends Controller
             'mqtt_topic' => $request->mqtt_topic,
             'token' => $token,
             'table_name' => $tableName,
+            'max_time_schedules' => $request->max_time_schedules ?? 5,
+            'max_sensor_automations' => $request->max_sensor_automations ?? 3,
         ]);
 
         // F. Simpan Konfigurasi Sensor ke Tabel device_sensors
+        $createdSensors = [];
         foreach ($processedSensors as $sensor) {
-            DeviceSensor::create([
+            $createdSensor = DeviceSensor::create([
                 'device_id' => $device->id,
                 'sensor_name' => $sensor['column_name'],  // Nama kolom di tabel log
                 'sensor_label' => $sensor['label'],
                 'unit' => $sensor['unit'],
             ]);
+            $createdSensors[] = $createdSensor; // Store for later reference
         }
 
         // G. Proses & Simpan Output (jika ada)
@@ -186,7 +190,23 @@ class AdminDeviceController extends Controller
         }
 
         // Simpan Konfigurasi Output ke Tabel device_outputs
-        foreach ($processedOutputs as $output) {
+        foreach ($processedOutputs as $index => $output) {
+            // Resolve automation_sensor_id
+            $automationSensorId = null;
+            if (($outputData[$index]['automation_mode'] ?? 'none') === 'sensor') {
+                $sensorIndexStr = $outputData[$index]['automation_sensor_id'] ?? null;
+                if ($sensorIndexStr) {
+                    // Extract numeric index from "sensor_1", "sensor_2", etc.
+                    preg_match('/sensor_(\d+)/', $sensorIndexStr, $matches);
+                    if (isset($matches[1])) {
+                        $sensorIndex = (int) $matches[1] - 1; // Convert to 0-based index
+                        if (isset($createdSensors[$sensorIndex])) {
+                            $automationSensorId = $createdSensors[$sensorIndex]->id;
+                        }
+                    }
+                }
+            }
+
             DeviceOutput::create([
                 'device_id' => $device->id,
                 'output_name' => $output['output_name'],
@@ -195,6 +215,11 @@ class AdminDeviceController extends Controller
                 'unit' => $output['unit'],
                 'default_value' => 0,
                 'current_value' => 0,
+                'automation_mode' => $outputData[$index]['automation_mode'] ?? 'none',
+                'max_schedules' => ($outputData[$index]['automation_mode'] ?? 'none') === 'time'
+                    ? ($outputData[$index]['max_schedules'] ?? 8)
+                    : null,
+                'automation_sensor_id' => $automationSensorId,
             ]);
         }
 
@@ -263,6 +288,8 @@ class AdminDeviceController extends Controller
         $device->update([
             'name' => $request->name,
             'mqtt_topic' => $request->mqtt_topic,
+            'max_time_schedules' => $request->max_time_schedules ?? $device->max_time_schedules,
+            'max_sensor_automations' => $request->max_sensor_automations ?? $device->max_sensor_automations,
             // Token, table_name & type JANGAN diupdate agar koneksi database aman
         ]);
 

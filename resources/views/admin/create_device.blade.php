@@ -301,6 +301,24 @@
                                 <div class="form-text">Device akan mengirim data ke topik ini.</div>
                             </div>
 
+                            <!-- AUTOMATION LIMITS -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label"><i class="bi bi-clock-history me-1"></i> Max Time
+                                        Schedules</label>
+                                    <input type="number" name="max_time_schedules" class="form-control" value="5"
+                                        min="0" max="20">
+                                    <div class="form-text">Maksimal automasi berbasis waktu (default: 5)</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label"><i class="bi bi-speedometer me-1"></i> Max Sensor
+                                        Automations</label>
+                                    <input type="number" name="max_sensor_automations" class="form-control" value="3"
+                                        min="0" max="10">
+                                    <div class="form-text">Maksimal automasi berbasis sensor (default: 3)</div>
+                                </div>
+                            </div>
+
                             <!-- STEP 3: DAFTAR SENSOR -->
                             <div class="mb-4">
                                 <label class="form-label">
@@ -413,27 +431,56 @@
             container.appendChild(row);
             updateSensorCount();
             updateSubmitButton();
+            refreshAutomationSensorDropdowns(); // Refresh automation sensor dropdowns
         }
 
-        function addOutputRow(outputKey = '', customLabel = '') {
+        function addOutputRow(outputKey = '', customLabel = '', autoMode = 'none', maxSchedules = 8, sensorId = '') {
             outputCounter++;
             const container = document.getElementById('outputContainer');
             const row = document.createElement('div');
             row.className = 'sensor-row output-row';
             row.id = `outputRow_${outputCounter}`;
+
+            const sensorOptions = getAddedSensorOptions(sensorId);
+
             row.innerHTML = `
-            <div class="row align-items-center g-2">
-                <div class="col-md-5">
+            <div class="row align-items-start g-2 mb-2">
+                <div class="col-md-3">
+                    <label class="form-label small text-white-50">Output Type</label>
                     <select class="form-select output-select" name="outputs[${outputCounter}][type]" onchange="updateSubmitButton()">
                         ${getOutputOptions(outputKey)}
                     </select>
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-3">
+                    <label class="form-label small text-white-50">Label (opsional)</label>
                     <input type="text" class="form-control output-label-input" name="outputs[${outputCounter}][label]" 
-                           placeholder="Label custom (opsional)" value="${customLabel}">
+                           placeholder="Label custom" value="${customLabel}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-white-50">Automation</label>
+                    <select class="form-select" name="outputs[${outputCounter}][automation_mode]" 
+                            onchange="toggleAutomationFields(${outputCounter}, this.value)">
+                        <option value="none" ${autoMode === 'none' ? 'selected' : ''}>None</option>
+                        <option value="time" ${autoMode === 'time' ? 'selected' : ''}>Time</option>
+                        <option value="sensor" ${autoMode === 'sensor' ? 'selected' : ''}>Sensor</option>
+                    </select>
+                </div>
+                <div class="col-md-2 automation-time-fields" id="timeFields_${outputCounter}" style="display: ${autoMode === 'time' ? 'block' : 'none'}">
+                    <label class="form-label small text-white-50">Max Schedules</label>
+                    <input type="number" class="form-control" name="outputs[${outputCounter}][max_schedules]" 
+                           value="${maxSchedules}" min="1" max="20">
+                </div>
+                <div class="col-md-2 automation-sensor-fields" id="sensorFields_${outputCounter}" style="display: ${autoMode === 'sensor' ? 'block' : 'none'}">
+                    <label class="form-label small text-white-50">Sensor</label>
+                    <select class="form-select" name="outputs[${outputCounter}][automation_sensor_id]">
+                        <option value="">-- Select --</option>
+                        ${sensorOptions}
+                    </select>
                 </div>
                 <div class="col-md-2 text-end">
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOutputRow(${outputCounter})" style="border-radius: 50%;">
+                    <label class="form-label small text-white-50">&nbsp;</label>
+                    <button type="button" class="btn btn-sm btn-outline-danger d-block w-100" 
+                            onclick="removeOutputRow(${outputCounter})" style="border-radius: 12px;">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -443,9 +490,55 @@
             updateOutputCount();
         }
 
+        function getAddedSensorOptions(selectedId = '') {
+            const sensorRows = document.querySelectorAll('.sensor-row:not(.output-row)');
+            let options = '';
+            let sensorIndex = 1;
+
+            sensorRows.forEach(row => {
+                const select = row.querySelector('.sensor-select');
+                const labelInput = row.querySelector('.sensor-label-input');
+
+                if (select && select.value) {
+                    const sensorType = select.value;
+                    const sensorInfo = availableSensors[sensorType];
+                    const customLabel = labelInput ? labelInput.value.trim() : '';
+                    const label = customLabel || sensorInfo.label;
+                    const value = `sensor_${sensorIndex}`;
+
+                    options += `<option value="${value}" ${value == selectedId ? 'selected' : ''}>${label}</option>`;
+                    sensorIndex++;
+                }
+            });
+
+            return options;
+        }
+
+        function refreshAutomationSensorDropdowns() {
+            const sensorOptions = getAddedSensorOptions();
+            document.querySelectorAll('.automation-sensor-select').forEach(dropdown => {
+                const currentValue = dropdown.value;
+                dropdown.innerHTML = '<option value="">-- Select Sensor --</option>' + sensorOptions;
+                dropdown.value = currentValue; // Restore selection if still valid
+            });
+        }
+
+        function toggleAutomationFields(index, mode) {
+            const timeFields = document.getElementById(`timeFields_${index}`);
+            const sensorFields = document.getElementById(`sensorFields_${index}`);
+
+            timeFields.style.display = mode === 'time' ? 'block' : 'none';
+            sensorFields.style.display = mode === 'sensor' ? 'block' : 'none';
+        }
+
         function removeSensorRow(id) {
             const row = document.getElementById(`sensorRow_${id}`);
-            if (row) { row.remove(); updateSensorCount(); updateSubmitButton(); }
+            if (row) {
+                row.remove();
+                updateSensorCount();
+                updateSubmitButton();
+                refreshAutomationSensorDropdowns(); // Refresh dropdowns after sensor removed
+            }
         }
 
         function removeOutputRow(id) {
@@ -474,7 +567,7 @@
             document.querySelectorAll('.type-card').forEach(card => card.classList.remove('selected'));
             document.querySelector(`[data-type="${type}"]`).classList.add('selected');
             document.getElementById('deviceType').value = type;
-            
+
             // Reset sensors
             document.getElementById('sensorContainer').innerHTML = '';
             sensorCounter = 0;

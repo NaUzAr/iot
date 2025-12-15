@@ -16,7 +16,10 @@ class DeviceOutput extends Model
         'output_type',
         'unit',
         'default_value',
-        'current_value'
+        'current_value',
+        'automation_mode',
+        'max_schedules',
+        'automation_sensor_id'
     ];
 
     /**
@@ -33,5 +36,21 @@ class DeviceOutput extends Model
     public function device()
     {
         return $this->belongsTo(Device::class);
+    }
+
+    /**
+     * Relasi ke OutputAutomationConfig
+     */
+    public function automationConfigs()
+    {
+        return $this->hasMany(OutputAutomationConfig::class, 'device_output_id');
+    }
+
+    /**
+     * Relasi ke Sensor untuk Automation
+     */
+    public function automationSensor()
+    {
+        return $this->belongsTo(DeviceSensor::class, 'automation_sensor_id');
     }
 }

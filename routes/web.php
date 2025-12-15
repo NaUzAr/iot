@@ -4,6 +4,11 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminDeviceController;
 use App\Http\Controllers\MonitoringController;
+use App\Http\Controllers\AutomationConfigController;
+use App\Http\Controllers\DocumentationController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\MqttTesterController;
+
 
 Route::middleware(['auth'])->group(function () {
 
@@ -23,6 +28,15 @@ Route::middleware(['auth'])->group(function () {
 
         // Delete Device
         Route::delete('/device/{id}', [AdminDeviceController::class, 'destroy'])->name('device.destroy');
+
+        // MQTT Tester
+        Route::get('/mqtt-tester', [MqttTesterController::class, 'index'])->name('mqtt-tester.index');
+        Route::get('/mqtt-tester/device/{id}', [MqttTesterController::class, 'getDeviceDetails'])->name('mqtt-tester.device');
+        Route::post('/mqtt-tester/send-sensor', [MqttTesterController::class, 'sendSensorData'])->name('mqtt-tester.send-sensor');
+        Route::post('/mqtt-tester/send-output', [MqttTesterController::class, 'sendOutputControl'])->name('mqtt-tester.send-output');
+        Route::post('/mqtt-tester/send-schedule', [MqttTesterController::class, 'sendSchedule'])->name('mqtt-tester.send-schedule');
+        Route::post('/mqtt-tester/request-status', [MqttTesterController::class, 'requestStatus'])->name('mqtt-tester.request-status');
+        Route::post('/mqtt-tester/send-custom', [MqttTesterController::class, 'sendCustom'])->name('mqtt-tester.send-custom');
     });
 
     // === MONITORING ROUTES (untuk semua user yang login) ===
@@ -35,6 +49,31 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/device/{id}/export', [MonitoringController::class, 'exportCsv'])->name('export');
         Route::post('/device/{id}/output/{outputId}/toggle', [MonitoringController::class, 'toggleOutput'])->name('output.toggle');
     });
+
+    // === AUTOMATION ROUTES (untuk user kelola automation) ===
+    Route::prefix('device/{deviceId}/automation')->name('automation.')->group(function () {
+        Route::get('/', [AutomationConfigController::class, 'index'])->name('index');
+        Route::get('/create', [AutomationConfigController::class, 'create'])->name('create');
+        Route::post('/', [AutomationConfigController::class, 'store'])->name('store');
+    });
+
+    Route::prefix('automation')->name('automation.')->group(function () {
+        Route::get('/{id}/edit', [AutomationConfigController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [AutomationConfigController::class, 'update'])->name('update');
+        Route::delete('/{id}', [AutomationConfigController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/toggle', [AutomationConfigController::class, 'toggle'])->name('toggle');
+        Route::get('/device/{deviceId}/sensors', [AutomationConfigController::class, 'getSensorsForDevice'])->name('sensors');
+    });
+
+    // === SCHEDULE MANAGEMENT ROUTES (Real-time MQTT) ===
+    Route::prefix('device/{userDeviceId}/output/{outputId}/schedule')->name('schedule.')->group(function () {
+        Route::get('/', [ScheduleController::class, 'index'])->name('index');
+        Route::post('/time', [ScheduleController::class, 'storeTimeSchedules'])->name('time.store');
+        Route::post('/sensor', [ScheduleController::class, 'storeSensorRule'])->name('sensor.store');
+    });
+    // Documentation (admin only for now, can adjust middleware later)
+    Route::get('/documentation/mqtt', [DocumentationController::class, 'mqtt'])->name('documentation.mqtt');
+    Route::get('/documentation/esp32', [DocumentationController::class, 'esp32'])->name('documentation.esp32');
 
 });
 

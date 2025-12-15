@@ -26,11 +26,11 @@ MQTT_PORT = 1883
 
 # Topic MQTT (harus sama dengan mqtt_topic device di database)
 # GANTI dengan topic device kamu!
-MQTT_TOPIC = "123123/bopal/123"
+MQTT_TOPIC = "ngangngong/bopal/aws1"
 
 # Token device AWS (dapatkan dari admin panel)
 # GANTI INI dengan token device kamu!
-TOKEN = "q8Z16KTk7CLXavmZ"
+TOKEN = "pmGQfWN4WyjK2eu1"
 
 # Interval pengiriman data (dalam detik)
 SEND_INTERVAL = 5
