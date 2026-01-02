@@ -1,5 +1,6 @@
+version: '2.4'
+
 services:
-  # Laravel App
   app:
     build:
       context: .
@@ -21,7 +22,6 @@ services:
       - DB_USERNAME=smartagri
       - DB_PASSWORD=smartagri_secret
 
-  # Nginx Web Server
   nginx:
     image: nginx:alpine
     container_name: smartagri-nginx
@@ -37,7 +37,6 @@ services:
     depends_on:
       - app
 
-  # PostgreSQL Database
   db:
     image: postgres:15-alpine
     container_name: smartagri-db
@@ -53,9 +52,25 @@ services:
     ports:
       - "5432:5432"
 
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: smartagri-mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./docker/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    networks:
+      - smartagri-network
+
 networks:
   smartagri-network:
     driver: bridge
 
 volumes:
   postgres_data:
+  mosquitto_data:
+  mosquitto_log:
