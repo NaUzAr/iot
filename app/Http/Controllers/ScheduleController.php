@@ -43,7 +43,7 @@ class ScheduleController extends Controller
     }
 
     /**
-     * Send time schedules to device
+     * Send single time schedule to device
      */
     public function storeTimeSchedules(Request $request, $userDeviceId, $outputId)
     {
@@ -55,31 +55,35 @@ class ScheduleController extends Controller
         $output = DeviceOutput::findOrFail($outputId);
 
         $validated = $request->validate([
-            'schedules' => 'required|array',
-            'schedules.*.on_time' => 'required|date_format:H:i',
-            'schedules.*.off_time' => 'required|date_format:H:i',
+            'slot_id' => 'required|integer|min:1',
+            'on_time' => 'required|date_format:H:i',
+            'off_time' => 'required|date_format:H:i',
         ]);
 
-        $schedules = array_map(function ($schedule, $index) {
-            return [
-                'id' => $index + 1,
-                'on' => $schedule['on_time'],
-                'off' => $schedule['off_time'],
-            ];
-        }, $validated['schedules'], array_keys($validated['schedules']));
+        $schedule = [
+            'id' => $validated['slot_id'],
+            'on' => $validated['on_time'],
+            'off' => $validated['off_time'],
+        ];
 
-        $success = $this->mqttService->sendTimeSchedules(
+        $success = $this->mqttService->sendSingleTimeSchedule(
             $device->mqtt_topic,
             $device->token,
             $output->output_name,
-            $schedules
+            $schedule
         );
 
         if ($success) {
-            return back()->with('success', 'Schedule berhasil dikirim ke device!');
+            return response()->json([
+                'success' => true,
+                'message' => 'Jadwal slot ' . $validated['slot_id'] . ' berhasil dikirim ke device!',
+            ]);
         }
 
-        return back()->with('error', 'Gagal mengirim schedule ke device.');
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal mengirim jadwal ke device.',
+        ], 500);
     }
 
     /**

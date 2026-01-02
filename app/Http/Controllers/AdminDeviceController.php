@@ -155,7 +155,7 @@ class AdminDeviceController extends Controller
         $outputCounts = [];
         $processedOutputs = [];
 
-        foreach ($outputData as $output) {
+        foreach ($outputData as $origIndex => $output) {
             if (empty($output['type']))
                 continue;
 
@@ -186,15 +186,18 @@ class AdminDeviceController extends Controller
                 'output_type' => $outputInfo['type'],
                 'label' => $label,
                 'unit' => $outputInfo['unit'] ?? '',
+                'orig_index' => $origIndex, // Store original index for correct mapping
             ];
         }
 
         // Simpan Konfigurasi Output ke Tabel device_outputs
-        foreach ($processedOutputs as $index => $output) {
+        foreach ($processedOutputs as $output) {
+            $origIndex = $output['orig_index'];
+
             // Resolve automation_sensor_id
             $automationSensorId = null;
-            if (($outputData[$index]['automation_mode'] ?? 'none') === 'sensor') {
-                $sensorIndexStr = $outputData[$index]['automation_sensor_id'] ?? null;
+            if (($outputData[$origIndex]['automation_mode'] ?? 'none') === 'sensor') {
+                $sensorIndexStr = $outputData[$origIndex]['automation_sensor_id'] ?? null;
                 if ($sensorIndexStr) {
                     // Extract numeric index from "sensor_1", "sensor_2", etc.
                     preg_match('/sensor_(\d+)/', $sensorIndexStr, $matches);
@@ -215,9 +218,9 @@ class AdminDeviceController extends Controller
                 'unit' => $output['unit'],
                 'default_value' => 0,
                 'current_value' => 0,
-                'automation_mode' => $outputData[$index]['automation_mode'] ?? 'none',
-                'max_schedules' => ($outputData[$index]['automation_mode'] ?? 'none') === 'time'
-                    ? ($outputData[$index]['max_schedules'] ?? 8)
+                'automation_mode' => $outputData[$origIndex]['automation_mode'] ?? 'none',
+                'max_schedules' => ($outputData[$origIndex]['automation_mode'] ?? 'none') === 'time'
+                    ? ($outputData[$origIndex]['max_schedules'] ?? 8)
                     : null,
                 'automation_sensor_id' => $automationSensorId,
             ]);

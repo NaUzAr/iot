@@ -5,10 +5,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Monitoring - Smart Agriculture</title>
+    @include('partials.pwa-head')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
+
 
     <style>
         :root {
@@ -203,13 +205,21 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-glass">
         <div class="container">
-            <a class="navbar-brand" href="{{ route('home') }}">
+            <a class="navbar-brand" href="{{ session('is_pwa') ? route('monitoring.index') : route('home') }}">
                 <i class="bi bi-tree-fill me-2"></i>SmartAgri
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{{ route('home') }}">
-                    <i class="bi bi-house me-1"></i> Beranda
-                </a>
+                @if(!session('is_pwa'))
+                    <a class="nav-link" href="{{ route('home') }}">
+                        <i class="bi bi-house me-1"></i> Beranda
+                    </a>
+                @endif
+                <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="nav-link btn btn-link" style="color: rgba(255,255,255,0.8);">
+                        <i class="bi bi-box-arrow-right me-1"></i> Logout
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
@@ -280,6 +290,7 @@
         @endif
     </div>
 
+    @include('partials.pwa-scripts')
 </body>
 
 </html>

@@ -32,7 +32,14 @@ class AuthController extends Controller
         // 2. Cek ke Database otomatis
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate(); // Mencegah Session Fixation attack
-            return redirect()->intended('/'); // Redirect ke dashboard atau halaman yang tuju sebelumnya
+
+            // Detect PWA mode and store in session
+            if ($request->has('pwa') || $request->session()->get('is_pwa')) {
+                $request->session()->put('is_pwa', true);
+                return redirect()->route('monitoring.index'); // PWA → langsung ke monitoring
+            }
+
+            return redirect()->intended('/'); // Web biasa → halaman yang dituju
         }
 
         // 3. Jika gagal, kembalikan error
@@ -49,7 +56,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:50|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed', 
+            'password' => 'required|string|min:6|confirmed',
             // 'confirmed' mewajibkan adanya field 'password_confirmation' di form HTML
         ]);
 

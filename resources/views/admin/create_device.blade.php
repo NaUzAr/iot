@@ -301,24 +301,6 @@
                                 <div class="form-text">Device akan mengirim data ke topik ini.</div>
                             </div>
 
-                            <!-- AUTOMATION LIMITS -->
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <label class="form-label"><i class="bi bi-clock-history me-1"></i> Max Time
-                                        Schedules</label>
-                                    <input type="number" name="max_time_schedules" class="form-control" value="5"
-                                        min="0" max="20">
-                                    <div class="form-text">Maksimal automasi berbasis waktu (default: 5)</div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label"><i class="bi bi-speedometer me-1"></i> Max Sensor
-                                        Automations</label>
-                                    <input type="number" name="max_sensor_automations" class="form-control" value="3"
-                                        min="0" max="10">
-                                    <div class="form-text">Maksimal automasi berbasis sensor (default: 3)</div>
-                                </div>
-                            </div>
-
                             <!-- STEP 3: DAFTAR SENSOR -->
                             <div class="mb-4">
                                 <label class="form-label">

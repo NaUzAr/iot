@@ -291,7 +291,8 @@ class MqttTesterController extends Controller
 
         $connectionSettings = $connectionSettings
             ->setKeepAliveInterval(60)
-            ->setConnectTimeout(10);
+            ->setConnectTimeout(30)
+            ->setSocketTimeout(30);
 
         $mqtt = new MqttClient($host, $port, 'laravel-tester-' . uniqid());
         $mqtt->connect($connectionSettings, true);

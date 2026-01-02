@@ -306,6 +306,11 @@
                                 <i class="bi bi-activity me-1"></i> Live Monitor
                             </button>
                         </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#bulkTab">
+                                <i class="bi bi-dice-5 me-1"></i> Bulk Random
+                            </button>
+                        </li>
                     </ul>
 
                     <div class="tab-content">
@@ -320,10 +325,16 @@
                                 </div>
                             </div>
 
-                            <button class="btn btn-gradient mt-3" id="sendSensorBtn" disabled>
-                                <i class="bi bi-send me-1"></i> Kirim Sensor Data
-                                <span class="loading-spinner spinner-border spinner-border-sm ms-2"></span>
-                            </button>
+                            <div class="d-flex gap-2 mt-3">
+                                <button class="btn btn-gradient" id="sendSensorBtn" disabled>
+                                    <i class="bi bi-send me-1"></i> Kirim Sensor Data
+                                    <span class="loading-spinner spinner-border spinner-border-sm ms-2"></span>
+                                </button>
+                                <button type="button" class="btn btn-outline-light" id="randomizeBtn" disabled
+                                    onclick="randomizeSensorValues()">
+                                    <i class="bi bi-dice-5 me-1"></i> Generate Random
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Output Control Tab -->
@@ -457,11 +468,12 @@
                         <!-- Custom JSON Tab -->
                         <div class="tab-pane fade" id="customTab">
                             <p class="text-white-50 mb-3">Tulis JSON payload custom untuk testing format apapun</p>
-                            
+
                             <div class="row g-3 mb-3">
                                 <div class="col-md-8">
-                                    <label class="form-label">Custom Topic (opsional, kosongkan untuk pakai topic device)</label>
-                                    <input type="text" class="form-control form-control-glass" id="customTopic" 
+                                    <label class="form-label">Custom Topic (opsional, kosongkan untuk pakai topic
+                                        device)</label>
+                                    <input type="text" class="form-control form-control-glass" id="customTopic"
                                         placeholder="Kosongkan untuk pakai MQTT Topic dari device...">
                                 </div>
                                 <div class="col-md-4">
@@ -477,20 +489,23 @@
 
                             <div class="mb-3">
                                 <label class="form-label">JSON Payload</label>
-                                <textarea class="form-control form-control-glass" id="customJson" rows="12" 
+                                <textarea class="form-control form-control-glass" id="customJson" rows="12"
                                     style="font-family: monospace; font-size: 0.9rem;" placeholder='{
     "token": "YOUR_TOKEN",
     "key": "value",
     "sensor": 25.5
 }'></textarea>
                                 <div class="mt-2 d-flex gap-2 flex-wrap">
-                                    <button type="button" class="btn btn-sm btn-outline-light" onclick="loadTemplate('sensor')">
+                                    <button type="button" class="btn btn-sm btn-outline-light"
+                                        onclick="loadTemplate('sensor')">
                                         <i class="bi bi-file-code me-1"></i> Template Sensor
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-outline-light" onclick="loadTemplate('output')">
+                                    <button type="button" class="btn btn-sm btn-outline-light"
+                                        onclick="loadTemplate('output')">
                                         <i class="bi bi-file-code me-1"></i> Template Output
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-outline-light" onclick="loadTemplate('schedule')">
+                                    <button type="button" class="btn btn-sm btn-outline-light"
+                                        onclick="loadTemplate('schedule')">
                                         <i class="bi bi-file-code me-1"></i> Template Schedule
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-light" onclick="formatJson()">
@@ -510,18 +525,20 @@
 
                         <!-- Live Monitor Tab -->
                         <div class="tab-pane fade" id="monitorTab">
-                            <p class="text-white-50 mb-3">Subscribe ke topic device dan lihat pesan MQTT secara real-time</p>
-                            
+                            <p class="text-white-50 mb-3">Subscribe ke topic device dan lihat pesan MQTT secara
+                                real-time</p>
+
                             <div class="row g-3 mb-3">
                                 <div class="col-md-5">
                                     <label class="form-label">MQTT Broker (WebSocket)</label>
-                                    <input type="text" class="form-control form-control-glass" id="wsBroker" 
-                                        value="wss://broker.hivemq.com:8884/mqtt" placeholder="wss://broker.hivemq.com:8884/mqtt">
+                                    <input type="text" class="form-control form-control-glass" id="wsBroker"
+                                        value="wss://broker.hivemq.com:8884/mqtt"
+                                        placeholder="wss://broker.hivemq.com:8884/mqtt">
                                 </div>
                                 <div class="col-md-5">
                                     <label class="form-label">Topic untuk Subscribe</label>
                                     <div class="input-group">
-                                        <input type="text" class="form-control form-control-glass" id="subscribeTopic" 
+                                        <input type="text" class="form-control form-control-glass" id="subscribeTopic"
                                             placeholder="smartagri/device/# atau topic device...">
                                         <button class="btn btn-outline-light" type="button" onclick="useDeviceTopic()">
                                             <i class="bi bi-cpu"></i>
@@ -531,7 +548,8 @@
                                 <div class="col-md-2">
                                     <label class="form-label">&nbsp;</label>
                                     <div class="d-grid">
-                                        <button class="btn btn-gradient" id="subscribeBtn" onclick="toggleSubscription()">
+                                        <button class="btn btn-gradient" id="subscribeBtn"
+                                            onclick="toggleSubscription()">
                                             <i class="bi bi-play-fill me-1"></i> Start
                                         </button>
                                     </div>
@@ -571,23 +589,138 @@
                                     <div class="d-flex gap-2">
                                         <div class="form-check form-check-inline">
                                             <input class="form-check-input" type="checkbox" id="autoScroll" checked>
-                                            <label class="form-check-label text-white-50 small" for="autoScroll">Auto-scroll</label>
+                                            <label class="form-check-label text-white-50 small"
+                                                for="autoScroll">Auto-scroll</label>
                                         </div>
                                         <div class="form-check form-check-inline">
                                             <input class="form-check-input" type="checkbox" id="prettyPrint" checked>
-                                            <label class="form-check-label text-white-50 small" for="prettyPrint">Pretty JSON</label>
+                                            <label class="form-check-label text-white-50 small" for="prettyPrint">Pretty
+                                                JSON</label>
                                         </div>
                                         <button class="btn btn-sm btn-outline-danger" onclick="clearMonitorLog()">
                                             <i class="bi bi-trash"></i> Clear
                                         </button>
                                     </div>
                                 </div>
-                                <div class="monitor-log" id="monitorLog" style="background: rgba(0,0,0,0.4); border-radius: 12px; padding: 1rem; height: 350px; overflow-y: auto; font-family: monospace; font-size: 0.85rem;">
+                                <div class="monitor-log" id="monitorLog"
+                                    style="background: rgba(0,0,0,0.4); border-radius: 12px; padding: 1rem; height: 350px; overflow-y: auto; font-family: monospace; font-size: 0.85rem;">
                                     <div class="text-white-50 text-center py-5">
                                         <i class="bi bi-broadcast" style="font-size: 2rem;"></i>
                                         <p class="mt-2 mb-0">Klik "Start" untuk mulai monitoring...</p>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Bulk Random Data Tab -->
+                        <div class="tab-pane fade" id="bulkTab">
+                            <p class="text-white-50 mb-3">Kirim data sensor random secara bulk untuk testing performa
+                            </p>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label">Jumlah Data</label>
+                                    <input type="number" class="form-control form-control-glass" id="bulkCount"
+                                        value="100" min="1" max="1000" placeholder="Jumlah record">
+                                    <small class="text-white-50">Max 1000 records</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Interval (ms)</label>
+                                    <input type="number" class="form-control form-control-glass" id="bulkInterval"
+                                        value="1000" min="100" max="10000" step="100" placeholder="Interval ms">
+                                    <small class="text-white-50">100ms - 10000ms</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Variasi Data</label>
+                                    <select class="form-select form-select-glass" id="bulkVariation">
+                                        <option value="random">Full Random</option>
+                                        <option value="increment">Increment (+1)</option>
+                                        <option value="wave">Wave (Sin)</option>
+                                        <option value="spike">Random Spike</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Sensor Range Settings -->
+                            <div class="sensor-field mb-3" id="bulkSensorRanges">
+                                <h6 class="text-white mb-3"><i class="bi bi-sliders me-2"></i>Range Nilai Sensor</h6>
+                                <div class="text-white-50 text-center py-3">
+                                    <i class="bi bi-arrow-left-circle me-2"></i>
+                                    Pilih device untuk melihat sensor ranges
+                                </div>
+                            </div>
+
+                            <!-- Progress Section -->
+                            <div class="sensor-field mb-3" id="bulkProgressSection" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-white">Progress</span>
+                                    <span class="badge bg-info" id="bulkProgressText">0 / 0</span>
+                                </div>
+                                <div class="progress" style="height: 10px; background: rgba(0,0,0,0.3);">
+                                    <div class="progress-bar bg-success" id="bulkProgressBar" role="progressbar"
+                                        style="width: 0%"></div>
+                                </div>
+                                <div class="mt-2 d-flex justify-content-between">
+                                    <small class="text-white-50" id="bulkStatus">Menunggu...</small>
+                                    <small class="text-warning" id="bulkSpeed">0 msg/s</small>
+                                </div>
+                            </div>
+
+                            <!-- Bulk Stats -->
+                            <div class="row g-3 mb-3" id="bulkStats" style="display: none;">
+                                <div class="col-md-3">
+                                    <div class="sensor-field text-center">
+                                        <div class="text-white-50 small">Terkirim</div>
+                                        <div class="text-success fs-4" id="statSent">0</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="sensor-field text-center">
+                                        <div class="text-white-50 small">Gagal</div>
+                                        <div class="text-danger fs-4" id="statFailed">0</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="sensor-field text-center">
+                                        <div class="text-white-50 small">Avg Time</div>
+                                        <div class="text-info fs-4" id="statAvgTime">0ms</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="sensor-field text-center">
+                                        <div class="text-white-50 small">Total Time</div>
+                                        <div class="text-warning fs-4" id="statTotalTime">0s</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Connection Status -->
+                            <div class="sensor-field mb-3" id="bulkConnectionStatus">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-white"><i class="bi bi-plug me-2"></i>Status Koneksi MQTT</span>
+                                    <span class="badge bg-secondary" id="bulkConnBadge">
+                                        <i class="bi bi-circle-fill me-1"></i>Belum Terkoneksi
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button class="btn btn-info" id="testConnectBtn" disabled
+                                    onclick="testBulkConnection()">
+                                    <i class="bi bi-plug me-1"></i> Test Connect
+                                    <span class="loading-spinner spinner-border spinner-border-sm ms-1"
+                                        id="connectSpinner" style="display:none;"></span>
+                                </button>
+                                <button class="btn btn-gradient" id="startBulkBtn" disabled onclick="startBulkSend()">
+                                    <i class="bi bi-play-fill me-1"></i> Start Bulk Send
+                                </button>
+                                <button class="btn btn-outline-danger" id="stopBulkBtn" disabled
+                                    onclick="stopBulkSend()">
+                                    <i class="bi bi-stop-fill me-1"></i> Stop
+                                </button>
+                                <button class="btn btn-outline-light" onclick="resetBulkStats()">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -642,6 +775,9 @@
                     generateOutputFields(data.outputs);
                     populateScheduleOutputs(data.outputs);
                     populateSensorDropdown(data.sensors);
+
+                    // Generate bulk random sensor ranges
+                    generateBulkSensorRanges(data.sensors);
 
                     // Enable buttons
                     enableButtons();
@@ -778,6 +914,30 @@
             document.getElementById('sendOutputBtn').disabled = false;
             document.getElementById('sendScheduleBtn').disabled = false;
             document.getElementById('sendStatusBtn').disabled = false;
+            document.getElementById('randomizeBtn').disabled = false;
+        }
+
+        // Generate random values for all sensor inputs
+        function randomizeSensorValues() {
+            const sensorInputs = document.querySelectorAll('.sensor-input');
+            sensorInputs.forEach(input => {
+                const sensorName = input.dataset.sensor;
+                let min = 0, max = 100;
+
+                // Set realistic ranges based on sensor type
+                if (sensorName.includes('temp')) { min = 15; max = 45; }
+                else if (sensorName.includes('hum') || sensorName.includes('soil')) { min = 20; max = 95; }
+                else if (sensorName.includes('light') || sensorName.includes('lux')) { min = 100; max = 10000; }
+                else if (sensorName.includes('rain')) { min = 0; max = 200; }
+                else if (sensorName.includes('wind')) { min = 0; max = 50; }
+                else if (sensorName.includes('pres')) { min = 990; max = 1030; }
+                else if (sensorName.includes('ph')) { min = 4; max = 9; }
+                else if (sensorName.includes('ec') || sensorName.includes('tds')) { min = 200; max = 2000; }
+
+                const value = (Math.random() * (max - min) + min).toFixed(1);
+                input.value = value;
+            });
+            showResult(true, { message: 'Random values generated!', timestamp: new Date().toISOString() });
         }
 
         function resetFields() {
@@ -957,7 +1117,7 @@
         });
 
         // ========== CUSTOM JSON FUNCTIONS ==========
-        
+
         function loadTemplate(type) {
             const token = document.getElementById('manualToken').value || 'YOUR_TOKEN_HERE';
             let template = {};
@@ -1020,9 +1180,9 @@
         }
 
         // Send Custom JSON
-        document.getElementById('sendCustomBtn').addEventListener('click', async function() {
+        document.getElementById('sendCustomBtn').addEventListener('click', async function () {
             const jsonText = document.getElementById('customJson').value.trim();
-            
+
             if (!jsonText) {
                 showResult(false, { error: 'JSON payload tidak boleh kosong!' });
                 return;
@@ -1042,7 +1202,7 @@
             if (!topic) {
                 topic = document.getElementById('mqttTopic').value;
             }
-            
+
             if (!topic) {
                 showResult(false, { error: 'Pilih device atau masukkan MQTT topic!' });
                 return;
@@ -1076,7 +1236,7 @@
         });
 
         // ========== LIVE MONITOR FUNCTIONS ==========
-        
+
         let mqttClient = null;
         let isSubscribed = false;
         let messageCounter = 0;
@@ -1093,7 +1253,7 @@
         function addWildcard(wildcard) {
             const input = document.getElementById('subscribeTopic');
             let topic = input.value.trim();
-            
+
             if (topic.endsWith('/')) {
                 topic += wildcard;
             } else if (topic) {
@@ -1101,19 +1261,19 @@
             } else {
                 topic = wildcard;
             }
-            
+
             input.value = topic;
         }
 
         function addSuffix(suffix) {
             const input = document.getElementById('subscribeTopic');
             let topic = input.value.trim();
-            
+
             // Remove existing wildcard at the end
             if (topic.endsWith('/#') || topic.endsWith('/+')) {
                 topic = topic.slice(0, -2);
             }
-            
+
             if (!topic.endsWith(suffix)) {
                 input.value = topic + suffix;
             }
@@ -1146,11 +1306,11 @@
                     reconnectPeriod: 5000
                 });
 
-                mqttClient.on('connect', function() {
+                mqttClient.on('connect', function () {
                     console.log('Connected to MQTT broker');
                     updateStatus('connected');
-                    
-                    mqttClient.subscribe(topic, { qos: 1 }, function(err) {
+
+                    mqttClient.subscribe(topic, { qos: 1 }, function (err) {
                         if (err) {
                             addLogMessage('error', 'Subscribe Error', err.message);
                         } else {
@@ -1161,13 +1321,13 @@
                     });
                 });
 
-                mqttClient.on('message', function(receivedTopic, message) {
+                mqttClient.on('message', function (receivedTopic, message) {
                     messageCounter++;
                     updateMessageCount();
-                    
+
                     let payload = message.toString();
                     const prettyPrint = document.getElementById('prettyPrint').checked;
-                    
+
                     // Try to parse as JSON
                     try {
                         const json = JSON.parse(payload);
@@ -1180,13 +1340,13 @@
                     }
                 });
 
-                mqttClient.on('error', function(error) {
+                mqttClient.on('error', function (error) {
                     console.error('MQTT Error:', error);
                     updateStatus('error');
                     addLogMessage('error', 'Connection Error', error.message);
                 });
 
-                mqttClient.on('close', function() {
+                mqttClient.on('close', function () {
                     console.log('MQTT Connection closed');
                     if (isSubscribed) {
                         updateStatus('disconnected');
@@ -1194,7 +1354,7 @@
                     }
                 });
 
-                mqttClient.on('reconnect', function() {
+                mqttClient.on('reconnect', function () {
                     updateStatus('connecting');
                     addLogMessage('system', 'Reconnecting', 'Attempting to reconnect...');
                 });
@@ -1224,7 +1384,7 @@
                 'disconnected': { class: 'bg-secondary', text: 'Disconnected' },
                 'error': { class: 'bg-danger', text: 'Error' }
             };
-            
+
             const s = statusMap[status] || statusMap['disconnected'];
             statusEl.className = `badge ${s.class}`;
             statusEl.innerHTML = `<i class="bi bi-circle-fill me-1"></i> ${s.text}`;
@@ -1250,38 +1410,38 @@
         function addLogMessage(type, title, content, isJson = false) {
             const log = document.getElementById('monitorLog');
             const timestamp = new Date().toLocaleTimeString();
-            
+
             // Remove placeholder if first message
             if (log.querySelector('.text-center')) {
                 log.innerHTML = '';
             }
-            
+
             const colors = {
                 'system': '#7dd3fc',
                 'data': '#86efac',
                 'error': '#fca5a5'
             };
-            
+
             const entry = document.createElement('div');
             entry.style.marginBottom = '0.75rem';
             entry.style.paddingBottom = '0.75rem';
             entry.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
-            
+
             let contentHtml = '';
             if (isJson) {
                 contentHtml = `<pre style="color: #fde047; margin: 0.25rem 0 0 0; white-space: pre-wrap;">${escapeHtml(content)}</pre>`;
             } else {
                 contentHtml = `<div style="color: #fff; margin-top: 0.25rem;">${escapeHtml(content)}</div>`;
             }
-            
+
             entry.innerHTML = `
                 <div style="color: rgba(255,255,255,0.5); font-size: 0.75rem;">${timestamp}</div>
                 <div style="color: ${colors[type] || '#fff'}; font-weight: 600;">${escapeHtml(title)}</div>
                 ${contentHtml}
             `;
-            
+
             log.appendChild(entry);
-            
+
             // Auto scroll
             if (document.getElementById('autoScroll').checked) {
                 log.scrollTop = log.scrollHeight;
@@ -1307,9 +1467,300 @@
         }
 
         // Cleanup on page unload
-        window.addEventListener('beforeunload', function() {
+        window.addEventListener('beforeunload', function () {
             if (mqttClient) {
                 mqttClient.end(true);
+            }
+        });
+
+        // ===== BULK RANDOM DATA FUNCTIONS =====
+        let bulkInterval = null;
+        let bulkSent = 0;
+        let bulkFailed = 0;
+        let bulkTotal = 0;
+        let bulkStartTime = null;
+        let bulkTimes = [];
+        let bulkSensorRanges = {};
+
+        // Generate sensor ranges when device is selected
+        function generateBulkSensorRanges(sensors) {
+            const container = document.getElementById('bulkSensorRanges');
+            if (!sensors || sensors.length === 0) {
+                container.innerHTML = `
+                    <h6 class="text-white mb-3"><i class="bi bi-sliders me-2"></i>Range Nilai Sensor</h6>
+                    <div class="text-white-50 text-center py-3">Device ini tidak punya sensor</div>
+                `;
+                return;
+            }
+
+            let html = '<h6 class="text-white mb-3"><i class="bi bi-sliders me-2"></i>Range Nilai Sensor</h6><div class="row g-2">';
+            sensors.forEach(sensor => {
+                const defaultMin = 0;
+                const defaultMax = sensor.sensor_name.includes('temp') ? 50 :
+                    sensor.sensor_name.includes('hum') ? 100 :
+                        sensor.sensor_name.includes('soil') ? 100 : 1000;
+                html += `
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge-sensor small">${sensor.sensor_label}</span>
+                            <input type="number" class="form-control form-control-glass form-control-sm bulk-range-min" 
+                                data-sensor="${sensor.sensor_name}" value="${defaultMin}" placeholder="Min" style="width: 70px;">
+                            <span class="text-white-50">-</span>
+                            <input type="number" class="form-control form-control-glass form-control-sm bulk-range-max" 
+                                data-sensor="${sensor.sensor_name}" value="${defaultMax}" placeholder="Max" style="width: 70px;">
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+
+            // Enable test connect button (start is enabled after successful connect)
+            document.getElementById('testConnectBtn').disabled = false;
+            document.getElementById('startBulkBtn').disabled = true;
+        }
+
+        // Test MQTT connection before bulk send
+        let bulkConnected = false;
+        async function testBulkConnection() {
+            const token = document.getElementById('manualToken').value || selectedDevice?.token;
+            const topic = document.getElementById('mqttTopic').value || selectedDevice?.mqtt_topic;
+
+            if (!token || !topic) {
+                showResult(false, { error: 'Pilih device atau masukkan token dan topic terlebih dahulu' });
+                return;
+            }
+
+            // Show loading
+            document.getElementById('connectSpinner').style.display = 'inline-block';
+            document.getElementById('testConnectBtn').disabled = true;
+            document.getElementById('bulkConnBadge').innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Connecting...';
+            document.getElementById('bulkConnBadge').className = 'badge bg-warning';
+
+            try {
+                // Send a test sensor data request to verify connection
+                const testData = {};
+                deviceSensors.forEach(s => {
+                    testData[s.sensor_name] = 0;
+                });
+
+                const response = await fetch('/admin/mqtt-tester/send-sensor', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        token: token,
+                        mqtt_topic: topic,
+                        sensor_data: testData
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    bulkConnected = true;
+                    document.getElementById('bulkConnBadge').innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Terkoneksi!';
+                    document.getElementById('bulkConnBadge').className = 'badge bg-success';
+                    document.getElementById('startBulkBtn').disabled = false;
+                    showResult(true, { message: 'Koneksi MQTT berhasil! Siap untuk bulk send.', topic: topic });
+                } else {
+                    bulkConnected = false;
+                    document.getElementById('bulkConnBadge').innerHTML = '<i class="bi bi-x-circle-fill me-1"></i>Gagal';
+                    document.getElementById('bulkConnBadge').className = 'badge bg-danger';
+                    document.getElementById('startBulkBtn').disabled = true;
+                    showResult(false, { error: data.message || 'Koneksi gagal' });
+                }
+            } catch (error) {
+                bulkConnected = false;
+                document.getElementById('bulkConnBadge').innerHTML = '<i class="bi bi-x-circle-fill me-1"></i>Error';
+                document.getElementById('bulkConnBadge').className = 'badge bg-danger';
+                document.getElementById('startBulkBtn').disabled = true;
+                showResult(false, { error: error.message });
+            } finally {
+                document.getElementById('connectSpinner').style.display = 'none';
+                document.getElementById('testConnectBtn').disabled = false;
+            }
+        }
+
+        // Generate random value based on variation type
+        function generateValue(min, max, variation, index, total) {
+            const range = max - min;
+            switch (variation) {
+                case 'random':
+                    return (Math.random() * range + min).toFixed(2);
+                case 'increment':
+                    return (min + (range * index / total)).toFixed(2);
+                case 'wave':
+                    const phase = (index / total) * Math.PI * 4; // 2 full waves
+                    return ((Math.sin(phase) + 1) / 2 * range + min).toFixed(2);
+                case 'spike':
+                    if (Math.random() < 0.1) { // 10% chance spike
+                        return (max + range * 0.5).toFixed(2); // Spike above max
+                    }
+                    return (Math.random() * range + min).toFixed(2);
+                default:
+                    return (Math.random() * range + min).toFixed(2);
+            }
+        }
+
+        // Start bulk sending
+        async function startBulkSend() {
+            const count = parseInt(document.getElementById('bulkCount').value) || 100;
+            const interval = parseInt(document.getElementById('bulkInterval').value) || 1000;
+            const variation = document.getElementById('bulkVariation').value;
+            const token = document.getElementById('manualToken').value || selectedDevice?.token;
+            const topic = document.getElementById('mqttTopic').value || selectedDevice?.mqtt_topic;
+
+            if (!token || !topic) {
+                showResult(false, { error: 'Pilih device atau masukkan token dan topic terlebih dahulu' });
+                return;
+            }
+
+            // Get sensor ranges
+            bulkSensorRanges = {};
+            document.querySelectorAll('.bulk-range-min').forEach(input => {
+                const sensor = input.dataset.sensor;
+                const min = parseFloat(input.value) || 0;
+                const max = parseFloat(document.querySelector(`.bulk-range-max[data-sensor="${sensor}"]`).value) || 100;
+                bulkSensorRanges[sensor] = { min, max };
+            });
+
+            if (Object.keys(bulkSensorRanges).length === 0 && deviceSensors.length > 0) {
+                deviceSensors.forEach(s => {
+                    bulkSensorRanges[s.sensor_name] = { min: 0, max: 100 };
+                });
+            }
+
+            // Reset stats
+            bulkSent = 0;
+            bulkFailed = 0;
+            bulkTotal = count;
+            bulkStartTime = Date.now();
+            bulkTimes = [];
+
+            // Update UI
+            document.getElementById('bulkProgressSection').style.display = 'block';
+            document.getElementById('bulkStats').style.display = 'flex';
+            document.getElementById('startBulkBtn').disabled = true;
+            document.getElementById('stopBulkBtn').disabled = false;
+            updateBulkProgress();
+
+            // Start sending
+            let index = 0;
+            bulkInterval = setInterval(async () => {
+                if (index >= count) {
+                    stopBulkSend();
+                    return;
+                }
+
+                const sendStart = Date.now();
+
+                // Generate sensor data
+                const sensorData = {};
+                Object.keys(bulkSensorRanges).forEach(sensor => {
+                    const { min, max } = bulkSensorRanges[sensor];
+                    sensorData[sensor] = parseFloat(generateValue(min, max, variation, index, count));
+                });
+
+                try {
+                    const response = await fetch('/admin/mqtt-tester/send-sensor', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            token: token,
+                            mqtt_topic: topic,
+                            sensor_data: sensorData
+                        })
+                    });
+
+                    const data = await response.json();
+                    const sendTime = Date.now() - sendStart;
+                    bulkTimes.push(sendTime);
+
+                    if (data.success) {
+                        bulkSent++;
+                    } else {
+                        bulkFailed++;
+                    }
+                } catch (error) {
+                    bulkFailed++;
+                }
+
+                index++;
+                updateBulkProgress();
+            }, interval);
+        }
+
+        // Stop bulk sending
+        function stopBulkSend() {
+            if (bulkInterval) {
+                clearInterval(bulkInterval);
+                bulkInterval = null;
+            }
+            document.getElementById('startBulkBtn').disabled = false;
+            document.getElementById('stopBulkBtn').disabled = true;
+            document.getElementById('bulkStatus').textContent = 'Selesai!';
+
+            // Calculate final stats
+            const totalTime = (Date.now() - bulkStartTime) / 1000;
+            document.getElementById('statTotalTime').textContent = totalTime.toFixed(1) + 's';
+        }
+
+        // Update progress display
+        function updateBulkProgress() {
+            const progress = bulkTotal > 0 ? ((bulkSent + bulkFailed) / bulkTotal * 100) : 0;
+            document.getElementById('bulkProgressBar').style.width = progress + '%';
+            document.getElementById('bulkProgressText').textContent = `${bulkSent + bulkFailed} / ${bulkTotal}`;
+            document.getElementById('bulkStatus').textContent = `Mengirim... (${bulkSent} sukses, ${bulkFailed} gagal)`;
+
+            // Stats
+            document.getElementById('statSent').textContent = bulkSent;
+            document.getElementById('statFailed').textContent = bulkFailed;
+
+            if (bulkTimes.length > 0) {
+                const avgTime = bulkTimes.reduce((a, b) => a + b, 0) / bulkTimes.length;
+                document.getElementById('statAvgTime').textContent = Math.round(avgTime) + 'ms';
+            }
+
+            const elapsed = (Date.now() - bulkStartTime) / 1000;
+            if (elapsed > 0) {
+                const speed = ((bulkSent + bulkFailed) / elapsed).toFixed(1);
+                document.getElementById('bulkSpeed').textContent = speed + ' msg/s';
+            }
+
+            document.getElementById('statTotalTime').textContent = elapsed.toFixed(1) + 's';
+        }
+
+        // Reset stats
+        function resetBulkStats() {
+            stopBulkSend();
+            bulkSent = 0;
+            bulkFailed = 0;
+            bulkTotal = 0;
+            bulkTimes = [];
+
+            document.getElementById('bulkProgressBar').style.width = '0%';
+            document.getElementById('bulkProgressText').textContent = '0 / 0';
+            document.getElementById('bulkStatus').textContent = 'Menunggu...';
+            document.getElementById('bulkSpeed').textContent = '0 msg/s';
+            document.getElementById('statSent').textContent = '0';
+            document.getElementById('statFailed').textContent = '0';
+            document.getElementById('statAvgTime').textContent = '0ms';
+            document.getElementById('statTotalTime').textContent = '0s';
+            document.getElementById('bulkProgressSection').style.display = 'none';
+            document.getElementById('bulkStats').style.display = 'none';
+        }
+
+        // Update device selection to also generate bulk ranges
+        const originalDeviceSelectHandler = document.getElementById('deviceSelect').onchange;
+        document.getElementById('deviceSelect').addEventListener('change', function () {
+            if (deviceSensors && deviceSensors.length > 0) {
+                setTimeout(() => generateBulkSensorRanges(deviceSensors), 100);
             }
         });
     </script>

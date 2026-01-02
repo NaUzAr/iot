@@ -65,6 +65,51 @@ class MqttScheduleService
     }
 
     /**
+     * Send single time-based schedule to device
+     * Format: <jdw{id}#{output}#{on}#{off}#>
+     * Contoh: <jdw1#pump_1#06:00#18:00#>
+     * 
+     * @param string $mqttTopic MQTT topic dari device (dari Admin Panel)
+     * @param string $deviceToken Token device untuk identifikasi
+     * @param string $outputName Nama output yang dijadwalkan
+     * @param array $schedule Single jadwal (id, on, off)
+     */
+    public function sendSingleTimeSchedule(string $mqttTopic, string $deviceToken, string $outputName, array $schedule): bool
+    {
+        try {
+            $mqtt = $this->connect();
+            $topic = "{$mqttTopic}/control";
+
+            // Format simple: <jdw{id}#{output}#{on}#{off}#>
+            $message = sprintf(
+                '<jdw%d#%s#%s#%s#>',
+                $schedule['id'],
+                $outputName,
+                $schedule['on'],
+                $schedule['off']
+            );
+
+            $mqtt->publish($topic, $message, 1); // QoS 1
+            $mqtt->disconnect();
+
+            Log::info("Time schedule sent to device via {$topic}", [
+                'message' => $message,
+                'output' => $outputName,
+                'slot_id' => $schedule['id'],
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error("Failed to send schedule via MQTT: " . $e->getMessage(), [
+                'mqtt_topic' => $mqttTopic,
+                'output' => $outputName,
+            ]);
+            return false;
+        }
+    }
+
+    /**
      * Send sensor-based rule to device
      * 
      * @param string $mqttTopic MQTT topic dari device (dari Admin Panel)

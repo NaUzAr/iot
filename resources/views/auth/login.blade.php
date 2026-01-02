@@ -4,11 +4,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - Smart Agriculture</title>
+    @include('partials.pwa-head')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <title>Login - Smart Agriculture</title>
     <style>
         :root {
             --primary-green: #22c55e;
@@ -172,8 +173,11 @@
             </div>
         @endif
 
-        <form action="{{ route('login.perform') }}" method="POST">
+        <form action="{{ route('login.perform') }}{{ request('pwa') ? '?pwa=1' : '' }}" method="POST">
             @csrf
+            @if(request('pwa'))
+                <input type="hidden" name="pwa" value="1">
+            @endif
 
             <div class="mb-3">
                 <label for="username" class="form-label">
@@ -202,15 +206,18 @@
             <p class="text-muted-light small mb-2">Belum punya akun?</p>
             <a href="{{ route('register') }}" class="link-green">Buat Akun Baru</a>
 
-            <div class="mt-4 pt-3 divider">
-                <a href="{{ route('home') }}" class="text-muted-light small text-decoration-none">
-                    <i class="bi bi-arrow-left me-1"></i>Kembali ke Beranda
-                </a>
-            </div>
+            @if(!request('pwa') && !session('is_pwa'))
+                <div class="mt-4 pt-3 divider">
+                    <a href="{{ route('home') }}" class="text-muted-light small text-decoration-none">
+                        <i class="bi bi-arrow-left me-1"></i>Kembali ke Beranda
+                    </a>
+                </div>
+            @endif
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    @include('partials.pwa-scripts')
 </body>
 
 </html>

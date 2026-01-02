@@ -57,7 +57,8 @@
                 <div>
                     <h3><i class="bi bi-calendar-check me-2"></i>{{ $output->output_label }} - Schedule</h3>
                     <p class="text-white-50 mb-0">Device: {{ $device->name }} | Mode:
-                        {{ ucfirst($output->automation_mode) }}</p>
+                        {{ ucfirst($output->automation_mode) }}
+                    </p>
                 </div>
                 <a href="{{ route('monitoring.show', $userDevice->id) }}" class="btn-glass">
                     <i class="bi bi-arrow-left me-1"></i> Kembali
@@ -76,32 +77,86 @@
                 <div class="glass-card">
                     <h5 class="mb-3"><i class="bi bi-clock me-2"></i>Time Schedule (Max: {{ $output->max_schedules }} slots)
                     </h5>
-                    <form action="{{ route('schedule.time.store', [$userDevice->id, $output->id]) }}" method="POST">
-                        @csrf
-                        <div id="scheduleContainer">
-                            @for($i = 0; $i < $output->max_schedules; $i++)
-                                <div class="row g-3 mb-3 align-items-center">
-                                    <div class="col-md-1"><strong>Slot {{ $i + 1 }}</strong></div>
-                                    <div class="col-md-5">
-                                        <label class="form-label small">ON Time</label>
-                                        <input type="time" name="schedules[{{ $i }}][on_time]" class="form-control" required>
+                    <div id="scheduleContainer">
+                        @for($i = 0; $i < $output->max_schedules; $i++)
+                            <div class="schedule-slot glass-card mb-3" id="slot-{{ $i }}">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-1">
+                                        <strong class="text-white-50">Slot {{ $i + 1 }}</strong>
                                     </div>
-                                    <div class="col-md-5">
+                                    <div class="col-md-3">
+                                        <label class="form-label small">ON Time</label>
+                                        <input type="time" id="on_time_{{ $i }}" class="form-control">
+                                    </div>
+                                    <div class="col-md-3">
                                         <label class="form-label small">OFF Time</label>
-                                        <input type="time" name="schedules[{{ $i }}][off_time]" class="form-control" required>
+                                        <input type="time" id="off_time_{{ $i }}" class="form-control">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="button" class="btn btn-primary w-100" onclick="sendSchedule({{ $i }})">
+                                            <i class="bi bi-send me-1"></i> Kirim Slot {{ $i + 1 }}
+                                        </button>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <span id="status_{{ $i }}" class="badge bg-secondary">Belum dikirim</span>
                                     </div>
                                 </div>
-                            @endfor
-                        </div>
-                        <button type="submit" class="btn btn-primary mt-3">
-                            <i class="bi bi-send me-1"></i> Kirim ke Device
-                        </button>
-                    </form>
+                            </div>
+                        @endfor
+                    </div>
                     <div class="alert alert-info mt-3 mb-0">
-                        <i class="bi bi-info-circle me-1"></i> Schedule akan dikirim ke device via MQTT. Device akan
-                        eksekusi otomatis setiap hari.
+                        <i class="bi bi-info-circle me-1"></i> Klik tombol "Kirim" pada setiap slot untuk mengirim jadwal ke
+                        device via MQTT.
                     </div>
                 </div>
+
+                <script>
+                    async function sendSchedule(slotIndex) {
+                        const onTime = document.getElementById(`on_time_${slotIndex}`).value;
+                        const offTime = document.getElementById(`off_time_${slotIndex}`).value;
+                        const statusBadge = document.getElementById(`status_${slotIndex}`);
+
+                        // Validation
+                        if (!onTime || !offTime) {
+                            alert('Mohon isi ON Time dan OFF Time terlebih dahulu!');
+                            return;
+                        }
+
+                        statusBadge.className = 'badge bg-warning';
+                        statusBadge.textContent = 'Mengirim...';
+
+                        try {
+                            const response = await fetch('{{ route("schedule.time.store", [$userDevice->id, $output->id]) }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    slot_id: slotIndex + 1,
+                                    on_time: onTime,
+                                    off_time: offTime
+                                })
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                statusBadge.className = 'badge bg-success';
+                                statusBadge.textContent = 'Terkirim ✓';
+                            } else {
+                                statusBadge.className = 'badge bg-danger';
+                                statusBadge.textContent = 'Gagal';
+                                alert(data.message || 'Gagal mengirim jadwal');
+                            }
+                        } catch (error) {
+                            statusBadge.className = 'badge bg-danger';
+                            statusBadge.textContent = 'Error';
+                            alert('Error: ' + error.message);
+                        }
+                    }
+                </script>
 
             @elseif($output->automation_mode === 'sensor')
                 <!-- SENSOR-BASED AUTOMATION -->
