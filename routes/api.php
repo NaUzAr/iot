@@ -93,6 +93,77 @@ Route::middleware('auth:sanctum')->group(function () {
             'message' => "Device '{$deviceName}' berhasil dihapus."
         ]);
     });
+
+    // GET - Detail device dengan sensors dan outputs
+    Route::get('/devices/{id}', function ($id) {
+        $userDevice = \App\Models\UserDevice::with(['device.sensors', 'device.outputs'])
+            ->where('user_id', auth()->id())
+            ->where('id', $id)
+            ->first();
+
+        if (!$userDevice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Device tidak ditemukan.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $userDevice
+        ]);
+    });
+
+    // GET - Data sensor terbaru untuk device
+    Route::get('/devices/{id}/sensor-data', function ($id) {
+        $userDevice = \App\Models\UserDevice::with(['device.sensors'])
+            ->where('user_id', auth()->id())
+            ->where('id', $id)
+            ->first();
+
+        if (!$userDevice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Device tidak ditemukan.'
+            ], 404);
+        }
+
+        $device = $userDevice->device;
+        $tableName = $device->table_name;
+
+        // Cek apakah tabel ada
+        if (!$tableName || !\Schema::hasTable($tableName)) {
+            return response()->json([
+                'success' => true,
+                'device' => $device->name,
+                'sensors' => $device->sensors,
+                'latest_data' => null,
+                'chart_data' => [],
+                'message' => 'Belum ada data sensor.'
+            ]);
+        }
+
+        // Ambil data terbaru
+        $latestData = \Illuminate\Support\Facades\DB::table($tableName)
+            ->orderBy('recorded_at', 'desc')
+            ->first();
+
+        // Ambil 50 data terakhir untuk chart
+        $chartData = \Illuminate\Support\Facades\DB::table($tableName)
+            ->orderBy('recorded_at', 'desc')
+            ->limit(50)
+            ->get()
+            ->reverse()
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'device' => $device->name,
+            'sensors' => $device->sensors,
+            'latest_data' => $latestData,
+            'chart_data' => $chartData
+        ]);
+    });
 });
 
 // ==================== SENSOR DATA ROUTES (IoT Device) ====================
