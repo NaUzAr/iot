@@ -478,13 +478,21 @@
                                 <div class="output-label">{{ $output->output_label }}</div>
 
                                 @if($output->output_type === 'boolean')
-                                    <!-- Toggle Switch for Boolean -->
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" id="output-{{ $output->id }}" data-output-id="{{ $output->id }}"
-                                            data-output-type="boolean" {{ $output->current_value ? 'checked' : '' }}
-                                            onchange="toggleOutput({{ $output->id }}, this.checked)">
-                                        <span class="toggle-slider"></span>
-                                    </label>
+                                    {{-- ON/OFF Buttons for Boolean --}}
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <button type="button"
+                                            class="btn btn-sm {{ $output->current_value ? 'btn-success' : 'btn-outline-success' }}"
+                                            onclick="setOutput({{ $output->id }}, true)" id="btn-on-{{ $output->id }}"
+                                            style="min-width: 50px;">
+                                            <i class="bi bi-power"></i> ON
+                                        </button>
+                                        <button type="button"
+                                            class="btn btn-sm {{ !$output->current_value ? 'btn-danger' : 'btn-outline-danger' }}"
+                                            onclick="setOutput({{ $output->id }}, false)" id="btn-off-{{ $output->id }}"
+                                            style="min-width: 50px;">
+                                            <i class="bi bi-x-lg"></i> OFF
+                                        </button>
+                                    </div>
                                     <div class="output-status {{ $output->current_value ? 'on' : 'off' }}"
                                         id="output-status-{{ $output->id }}">
                                         {{ $output->current_value ? 'ON' : 'OFF' }}
@@ -778,7 +786,61 @@
         const csrfToken = '{{ csrf_token() }}';
         const userDeviceId = {{ $userDevice->id }};
 
-        // Toggle output (AJAX)
+        // Set output ON/OFF (for buttons)
+        function setOutput(outputId, isOn) {
+            const url = `/monitoring/device/${userDeviceId}/output/${outputId}/toggle`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ value: isOn })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update button styles
+                        const btnOn = document.getElementById(`btn-on-${outputId}`);
+                        const btnOff = document.getElementById(`btn-off-${outputId}`);
+                        const statusEl = document.getElementById(`output-status-${outputId}`);
+
+                        if (isOn) {
+                            btnOn.className = 'btn btn-sm btn-success';
+                            btnOff.className = 'btn btn-sm btn-outline-danger';
+                        } else {
+                            btnOn.className = 'btn btn-sm btn-outline-success';
+                            btnOff.className = 'btn btn-sm btn-danger';
+                        }
+
+                        if (statusEl) {
+                            statusEl.textContent = isOn ? 'ON' : 'OFF';
+                            statusEl.className = isOn ? 'output-status on' : 'output-status off';
+                        }
+
+                        // Show success feedback
+                        const card = document.getElementById(`output-card-${outputId}`);
+                        if (card) {
+                            card.style.borderColor = '#22c55e';
+                            setTimeout(() => {
+                                card.style.borderColor = 'rgba(250, 204, 21, 0.3)';
+                            }, 500);
+                        }
+
+                        console.log('Output updated:', data.message);
+                    } else {
+                        console.error('Failed to update output');
+                        alert('Gagal mengupdate output. Silakan coba lagi.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat mengupdate output.');
+                });
+        }
+
+        // Toggle output (AJAX) - kept for range sliders
         function toggleOutput(outputId, value) {
             const url = `/monitoring/device/${userDeviceId}/output/${outputId}/toggle`;
 
