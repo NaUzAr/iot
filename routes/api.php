@@ -214,6 +214,36 @@ Route::middleware('auth:sanctum')->group(function () {
             ]
         ]);
     });
+
+    // GET - MQTT configuration for device
+    Route::get('/devices/{id}/mqtt', function ($id) {
+        $userDevice = \App\Models\UserDevice::with(['device'])
+            ->where('user_id', auth()->id())
+            ->where('id', $id)
+            ->first();
+
+        if (!$userDevice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Device tidak ditemukan.'
+            ], 404);
+        }
+
+        $device = $userDevice->device;
+
+        return response()->json([
+            'success' => true,
+            'mqtt' => [
+                'broker' => config('mqtt.host', env('MQTT_HOST', 'smartagri.web.id')),
+                'port' => config('mqtt.port', env('MQTT_PORT', 1883)),
+                'websocket_port' => 9001,
+                'topic_data' => $device->mqtt_topic,
+                'topic_control' => $device->mqtt_topic . '/control',
+                'topic_status' => $device->mqtt_topic . '/status',
+                'device_token' => $device->token,
+            ]
+        ]);
+    });
 });
 
 // ==================== SENSOR DATA ROUTES (IoT Device) ====================

@@ -24,11 +24,11 @@ MQTT_BROKER = "smartagri.web.id"
 MQTT_PORT = 1883
 
 # Topic MQTT untuk menerima perintah output
-# Biasanya format: [mqtt_topic]/control
-MQTT_TOPIC = "sensor/aws/data/control"
+# Format: [mqtt_topic]/control
+MQTT_TOPIC = "Aws1/control"
 
 # Token device (untuk validasi perintah)
-TOKEN = "YOUR_DEVICE_TOKEN"
+TOKEN = "khtYF34EWlq0K2li"
 
 # ============================================
 # STATE SIMULASI OUTPUT
