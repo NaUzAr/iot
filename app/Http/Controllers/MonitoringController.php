@@ -212,6 +212,7 @@ class MonitoringController extends Controller
         // Validasi user punya akses ke device ini
         $userDevice = UserDevice::where('user_id', Auth::id())
             ->where('id', $userDeviceId)
+            ->with('device')
             ->firstOrFail();
 
         // Ambil output dari device ini
@@ -237,8 +238,45 @@ class MonitoringController extends Controller
         $output->current_value = $newValue;
         $output->save();
 
-        // TODO: Di sini bisa ditambahkan MQTT publish ke device
-        // Untuk sekarang, hanya update database
+        // Publish ke MQTT untuk kirim perintah ke device
+        try {
+            $device = $userDevice->device;
+            $topic = $device->mqtt_topic . '/control';
+
+            $message = [
+                'type' => 'set_output',
+                'token' => $device->token,
+                'output' => $output->output_name,
+                'value' => $newValue,
+                'timestamp' => now()->toIso8601String(),
+            ];
+
+            // MQTT Connection
+            $host = config('mqtt.host', env('MQTT_HOST', 'broker.hivemq.com'));
+            $port = config('mqtt.port', env('MQTT_PORT', 1883));
+            $username = config('mqtt.username', env('MQTT_USERNAME'));
+            $password = config('mqtt.password', env('MQTT_PASSWORD'));
+
+            $connectionSettings = new \PhpMqtt\Client\ConnectionSettings();
+            if ($username && $password) {
+                $connectionSettings = $connectionSettings
+                    ->setUsername($username)
+                    ->setPassword($password);
+            }
+            $connectionSettings = $connectionSettings
+                ->setKeepAliveInterval(60)
+                ->setConnectTimeout(10);
+
+            $mqtt = new \PhpMqtt\Client\MqttClient($host, $port, 'laravel-control-' . uniqid());
+            $mqtt->connect($connectionSettings, true);
+            $mqtt->publish($topic, json_encode($message), 1);
+            $mqtt->disconnect();
+
+            \Log::info("MQTT Output Control sent", ['topic' => $topic, 'message' => $message]);
+        } catch (\Exception $e) {
+            \Log::error("MQTT Output Control failed: " . $e->getMessage());
+            // Continue anyway, database already updated
+        }
 
         return response()->json([
             'success' => true,
