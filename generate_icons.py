@@ -9,9 +9,9 @@ import os
 # Icon sizes required for PWA and Android
 ICON_SIZES = [72, 96, 128, 144, 152, 192, 384, 512]
 
-# Source images
-SOURCE_ICON = r"C:\Users\MSI\.gemini\antigravity\brain\c7ce6431-fd95-4aff-b403-3672e13e40d7\smartagri_icon_1767343486082.png"
-SOURCE_MASKABLE = r"C:\Users\MSI\.gemini\antigravity\brain\c7ce6431-fd95-4aff-b403-3672e13e40d7\smartagri_maskable_1767343512470.png"
+# Source images - use the new logo
+SOURCE_ICON = r"d:\01. Program\00. OTW JADI WEB DEV\Beljar\laravel\belajar\public\images\logo.png"
+SOURCE_MASKABLE = r"d:\01. Program\00. OTW JADI WEB DEV\Beljar\laravel\belajar\public\images\logo.png"
 
 # Output directory
 OUTPUT_DIR = r"d:\01. Program\00. OTW JADI WEB DEV\Beljar\laravel\belajar\public\icons"
