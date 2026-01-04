@@ -243,10 +243,8 @@ class MonitoringController extends Controller
             $device = $userDevice->device;
             $topic = $device->mqtt_topic . '/control';
 
-            $message = [
-                'output' => $output->output_name,
-                'value' => $newValue,
-            ];
+            // Format simpel: <output#value>
+            $message = sprintf('<%s#%s>', $output->output_name, $newValue);
 
             // MQTT Connection
             $host = config('mqtt.host', env('MQTT_HOST', 'smartagri.web.id'));
@@ -266,7 +264,7 @@ class MonitoringController extends Controller
 
             $mqtt = new \PhpMqtt\Client\MqttClient($host, $port, 'laravel-control-' . uniqid());
             $mqtt->connect($connectionSettings, true);
-            $mqtt->publish($topic, json_encode($message), 1);
+            $mqtt->publish($topic, $message, 1);
             $mqtt->disconnect();
 
             \Log::info("MQTT Output Control sent", ['topic' => $topic, 'message' => $message]);
