@@ -92,35 +92,132 @@ class AdminDeviceController extends Controller
         $request->validate([
             'name' => 'required|string|max:100',
             'mqtt_topic' => 'required|string|max:100',
+            'type' => 'required|string|in:aws,greenhouse',
+            'sensors' => 'required|array|min:1',
+            'sensors.*.type' => 'required|string',
         ]);
 
-        // B. Generate Token Unik & Nama Tabel
-        $token = Str::random(16); // Token acak 16 karakter
-        $tableName = 'log_' . $token; // Nama tabel: log_x8s7d...
+        // Available sensor configs
+        $availableSensors = [
+            'temperature' => ['label' => 'Suhu', 'unit' => '°C'],
+            'humidity' => ['label' => 'Kelembaban Udara', 'unit' => '%'],
+            'soil_moisture' => ['label' => 'Kelembaban Tanah', 'unit' => '%'],
+            'rainfall' => ['label' => 'Curah Hujan', 'unit' => 'mm'],
+            'wind_speed' => ['label' => 'Kecepatan Angin', 'unit' => 'm/s'],
+            'wind_direction' => ['label' => 'Arah Angin', 'unit' => '°'],
+            'pressure' => ['label' => 'Tekanan Udara', 'unit' => 'hPa'],
+            'light' => ['label' => 'Intensitas Cahaya', 'unit' => 'lux'],
+            'uv' => ['label' => 'UV Index', 'unit' => ''],
+            'co2' => ['label' => 'CO2', 'unit' => 'ppm'],
+            'ph' => ['label' => 'pH Tanah', 'unit' => ''],
+            'ec' => ['label' => 'EC Tanah', 'unit' => 'mS/cm'],
+        ];
 
-        // C. BUAT TABEL LOG OTOMATIS (Schema Builder)
+        // Available output configs
+        $availableOutputs = [
+            'relay' => ['label' => 'Relay', 'type' => 'boolean', 'unit' => ''],
+            'pump' => ['label' => 'Pompa Air', 'type' => 'boolean', 'unit' => ''],
+            'fan' => ['label' => 'Kipas', 'type' => 'boolean', 'unit' => ''],
+            'valve' => ['label' => 'Katup Air', 'type' => 'boolean', 'unit' => ''],
+            'dimmer' => ['label' => 'Dimmer', 'type' => 'percentage', 'unit' => '%'],
+            'servo' => ['label' => 'Servo', 'type' => 'number', 'unit' => '°'],
+        ];
+
+        // B. Generate Token Unik & Nama Tabel
+        $token = Str::random(16);
+        $tableName = 'log_' . $token;
+
+        // C. Process sensors from form
+        $sensors = $request->sensors;
+        $sensorColumns = [];
+        $sensorCounter = [];
+
+        foreach ($sensors as $sensor) {
+            $type = $sensor['type'];
+            if (!isset($availableSensors[$type]))
+                continue;
+
+            // Count duplicates to generate unique names
+            if (!isset($sensorCounter[$type])) {
+                $sensorCounter[$type] = 0;
+            }
+            $sensorCounter[$type]++;
+
+            // Generate column name (e.g., temperature, temperature_2)
+            $columnName = $sensorCounter[$type] > 1 ? "{$type}_{$sensorCounter[$type]}" : $type;
+
+            // Custom label from form or default
+            $label = !empty($sensor['label']) ? $sensor['label'] : $availableSensors[$type]['label'];
+            if ($sensorCounter[$type] > 1 && empty($sensor['label'])) {
+                $label .= " {$sensorCounter[$type]}";
+            }
+
+            $sensorColumns[] = [
+                'name' => $columnName,
+                'type' => $type,
+                'label' => $label,
+                'unit' => $availableSensors[$type]['unit'],
+            ];
+        }
+
+        // D. BUAT TABEL LOG OTOMATIS dengan sensor columns
         if (!Schema::hasTable($tableName)) {
-            Schema::create($tableName, function (Blueprint $table) {
+            Schema::create($tableName, function (Blueprint $table) use ($sensorColumns) {
                 $table->id();
-                // Sesuaikan kolom ini dengan sensor Weather Station kamu
-                $table->float('temperature')->nullable();
-                $table->float('humidity')->nullable();
-                $table->float('rainfall')->nullable();
+                foreach ($sensorColumns as $col) {
+                    $table->float($col['name'])->nullable();
+                }
                 $table->timestamp('recorded_at')->useCurrent();
             });
         }
 
-        // D. Simpan Metadata ke Tabel Devices
-        Device::create([
+        // E. Simpan Device ke database
+        $device = Device::create([
             'name' => $request->name,
             'mqtt_topic' => $request->mqtt_topic,
             'token' => $token,
             'table_name' => $tableName,
+            'type' => $request->type,
         ]);
 
-        // E. Redirect ke Halaman List Device (Bukan Dashboard)
+        // F. Simpan Sensors ke device_sensors
+        foreach ($sensorColumns as $sensor) {
+            \App\Models\DeviceSensor::create([
+                'device_id' => $device->id,
+                'sensor_name' => $sensor['name'],
+                'sensor_label' => $sensor['label'],
+                'unit' => $sensor['unit'],
+            ]);
+        }
+
+        // G. Simpan Outputs ke device_outputs
+        if ($request->has('outputs')) {
+            foreach ($request->outputs as $output) {
+                if (empty($output['type']))
+                    continue;
+
+                $type = $output['type'];
+                if (!isset($availableOutputs[$type]))
+                    continue;
+
+                $outputConfig = $availableOutputs[$type];
+                $label = !empty($output['label']) ? $output['label'] : $outputConfig['label'];
+
+                \App\Models\DeviceOutput::create([
+                    'device_id' => $device->id,
+                    'output_name' => $type . '_' . uniqid(),
+                    'output_label' => $label,
+                    'output_type' => $outputConfig['type'],
+                    'unit' => $outputConfig['unit'],
+                    'automation_mode' => $output['automation_mode'] ?? 'none',
+                    'max_schedules' => $output['max_schedules'] ?? 8,
+                ]);
+            }
+        }
+
+        // H. Redirect ke Halaman List Device
         return redirect()->route('admin.devices.index')
-            ->with('success', "Sukses! Device '$request->name' berhasil dibuat dan Tabel Log siap.");
+            ->with('success', "Sukses! Device '{$request->name}' berhasil dibuat dengan " . count($sensorColumns) . " sensor.");
     }
 
     // 4. HALAMAN FORM EDIT
