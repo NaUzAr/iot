@@ -29,6 +29,9 @@ Route::middleware(['auth'])->group(function () {
         // Delete Device
         Route::delete('/device/{id}', [AdminDeviceController::class, 'destroy'])->name('device.destroy');
 
+        // Monitoring Device (Admin View)
+        Route::get('/device/{id}/monitoring', [AdminDeviceController::class, 'showMonitoring'])->name('device.monitoring');
+
         // MQTT Tester
         Route::get('/mqtt-tester', [MqttTesterController::class, 'index'])->name('mqtt-tester.index');
         Route::get('/mqtt-tester/device/{id}', [MqttTesterController::class, 'getDeviceDetails'])->name('mqtt-tester.device');

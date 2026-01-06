@@ -15,7 +15,8 @@ use Illuminate\Database\Schema\Blueprint;
 class AdminDeviceController extends Controller
 {
     // Helper: Pastikan yang akses adalah Admin
-    private function checkAdmin() {
+    private function checkAdmin()
+    {
         // Pastikan kolom 'role' sudah ada di tabel users
         if (Auth::user()->role !== 'admin') {
             abort(403, 'Akses Ditolak. Halaman ini khusus Admin.');
@@ -26,15 +27,15 @@ class AdminDeviceController extends Controller
     public function index()
     {
         $this->checkAdmin();
-        $devices = Device::all(); 
+        $devices = Device::all();
         return view('admin.index', compact('devices'));
     }
 
     // 2. HALAMAN FORM CREATE
-    public function create() 
-    { 
+    public function create()
+    {
         $this->checkAdmin();
-        return view('admin.create_device'); 
+        return view('admin.create_device');
     }
 
     // 3. PROSES SIMPAN DEVICE BARU (STORE)
@@ -59,7 +60,7 @@ class AdminDeviceController extends Controller
                 // Sesuaikan kolom ini dengan sensor Weather Station kamu
                 $table->float('temperature')->nullable();
                 $table->float('humidity')->nullable();
-                $table->float('rainfall')->nullable(); 
+                $table->float('rainfall')->nullable();
                 $table->timestamp('recorded_at')->useCurrent();
             });
         }
@@ -89,14 +90,14 @@ class AdminDeviceController extends Controller
     public function update(Request $request, $id)
     {
         $this->checkAdmin();
-        
+
         $request->validate([
             'name' => 'required|string|max:100',
             'mqtt_topic' => 'required|string|max:100',
         ]);
 
         $device = Device::findOrFail($id);
-        
+
         $device->update([
             'name' => $request->name,
             'mqtt_topic' => $request->mqtt_topic,
@@ -112,7 +113,7 @@ class AdminDeviceController extends Controller
     {
         $this->checkAdmin();
         $device = Device::findOrFail($id);
-        
+
         // A. Hapus Tabel Log fisiknya dari database (PENTING!)
         // Hati-hati, data sensor akan hilang permanen
         Schema::dropIfExists($device->table_name);
@@ -122,5 +123,45 @@ class AdminDeviceController extends Controller
 
         return redirect()->route('admin.devices.index')
             ->with('success', 'Device dan Tabel Log berhasil dihapus permanen.');
+    }
+
+    // 7. HALAMAN MONITORING DEVICE (ADMIN VIEW)
+    public function showMonitoring($id)
+    {
+        $this->checkAdmin();
+
+        $device = Device::with(['sensors', 'outputs'])->findOrFail($id);
+        $sensors = $device->sensors;
+        $outputs = $device->outputs;
+
+        // Default values
+        $logData = collect();
+        $chartData = collect();
+        $latestData = null;
+
+        if ($device->table_name && Schema::hasTable($device->table_name)) {
+            // Ambil 50 data terbaru untuk chart
+            $chartData = \DB::table($device->table_name)
+                ->orderBy('recorded_at', 'desc')
+                ->limit(50)
+                ->get()
+                ->reverse()
+                ->values();
+
+            // Ambil data untuk tabel dengan pagination (20 per halaman)
+            $logData = \DB::table($device->table_name)
+                ->orderBy('recorded_at', 'desc')
+                ->paginate(20);
+
+            // Ambil data terbaru untuk display sensor cards
+            $latestData = \DB::table($device->table_name)
+                ->orderBy('recorded_at', 'desc')
+                ->first();
+        } else {
+            // Buat paginator kosong jika tidak ada data
+            $logData = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
+        }
+
+        return view('admin.monitoring', compact('device', 'sensors', 'outputs', 'logData', 'chartData', 'latestData'));
     }
 }

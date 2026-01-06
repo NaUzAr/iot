@@ -298,7 +298,8 @@
                             <tr>
                                 <td class="fw-semibold">{{ $loop->iteration }}</td>
                                 <td>
-                                    <a href="{{ route('monitoring.show', $device->id) }}" class="text-decoration-none">
+                                    <a href="{{ route('admin.device.monitoring', $device->id) }}"
+                                        class="text-decoration-none">
                                         <div class="fw-bold text-white">{{ $device->name }}</div>
                                         <small class="text-white-50">{{ $device->table_name }}</small>
                                     </a>
