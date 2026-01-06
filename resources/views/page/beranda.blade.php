@@ -669,14 +669,91 @@
                     </div>
     </section>
 
+    <!-- Decorative CTA Section -->
+    <section class="py-5 position-relative overflow-hidden">
+        <!-- Wave Decoration -->
+        <div class="position-absolute w-100" style="top: 0; left: 0; transform: translateY(-50%);">
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" style="width: 100%; height: 60px;">
+                <path d="M0,60 C150,90 350,30 600,60 C850,90 1050,30 1200,60 L1200,120 L0,120 Z" 
+                      fill="rgba(34, 197, 94, 0.1)"></path>
+            </svg>
+        </div>
+        
+        <div class="container text-center position-relative">
+            <!-- Floating Icons Background -->
+            <div class="position-absolute" style="top: 20%; left: 10%; opacity: 0.1; font-size: 4rem;">
+                <i class="bi bi-cloud-sun text-success"></i>
+            </div>
+            <div class="position-absolute" style="top: 40%; right: 15%; opacity: 0.1; font-size: 3rem;">
+                <i class="bi bi-moisture text-info"></i>
+            </div>
+            <div class="position-absolute" style="bottom: 20%; left: 20%; opacity: 0.1; font-size: 2.5rem;">
+                <i class="bi bi-thermometer-half text-warning"></i>
+            </div>
+            
+            <div class="glass-card p-5 mx-auto" style="max-width: 700px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(14, 165, 233, 0.15) 100%);">
+                <div class="mb-4">
+                    <span class="badge bg-success bg-opacity-25 text-success px-3 py-2 rounded-pill mb-3">
+                        <i class="bi bi-rocket-takeoff me-1"></i> Mulai Sekarang
+                    </span>
+                </div>
+                <h3 class="text-white fw-bold mb-3">
+                    Siap Memulai Smart Farming?
+                </h3>
+                <p class="text-white-50 mb-4">
+                    Bergabung dengan ribuan petani yang sudah menggunakan teknologi IoT untuk meningkatkan hasil panen mereka.
+                </p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    @guest
+                    <a href="{{ route('login') }}" class="btn btn-gradient px-4 py-2">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                    </a>
+                    <a href="{{ route('register') }}" class="btn btn-outline-light px-4 py-2">
+                        <i class="bi bi-person-plus me-2"></i>Daftar Gratis
+                    </a>
+                    @else
+                    <a href="{{ route('dashboard') }}" class="btn btn-gradient px-4 py-2">
+                        <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                    </a>
+                    @endguest
+                </div>
+                
+                <!-- Trust Indicators -->
+                <div class="mt-4 pt-4 border-top border-secondary">
+                    <div class="row g-3 text-white-50 small">
+                        <div class="col-4">
+                            <i class="bi bi-shield-check text-success"></i>
+                            <div>100% Aman</div>
+                        </div>
+                        <div class="col-4">
+                            <i class="bi bi-lightning-charge text-warning"></i>
+                            <div>Real-time</div>
+                        </div>
+                        <div class="col-4">
+                            <i class="bi bi-headset text-info"></i>
+                            <div>24/7 Support</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer-glass">
         <div class="container">
-            <div class="row align-items-center">
-                <div class="col-12 text-center">
+            <div class="row align-items-center py-2">
+                <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
                     <p class="footer-text mb-0">
-                        © 2025 <a href="#" class="footer-link">Smart Agriculture</a> - Tim Engineering IoT Pertanian
+                        © 2025 <a href="#" class="footer-link">Smart Agriculture</a> - IoT Platform
                     </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <div class="d-flex gap-3 justify-content-center justify-content-md-end">
+                        <a href="#" class="text-white-50 text-decoration-none small"><i class="bi bi-github me-1"></i>GitHub</a>
+                        <a href="#features" class="text-white-50 text-decoration-none small"><i class="bi bi-info-circle me-1"></i>Fitur</a>
+                        <a href="#products" class="text-white-50 text-decoration-none small"><i class="bi bi-box me-1"></i>Produk</a>
+                    </div>
                 </div>
             </div>
         </div>
