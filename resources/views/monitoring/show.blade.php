@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $userDevice->custom_name }} - Monitoring</title>
+    <title>{{ ($isAdminView ?? false) ? $device->name : $userDevice->custom_name }} - Monitoring</title>
     @include('partials.pwa-head')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -745,180 +745,180 @@
     </div>
 
     @if(!($isAdminView ?? false))
-    <!-- Export Modal -->
-    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content"
-                style="background: linear-gradient(135deg, #134e4a 0%, #166534 100%); border: 1px solid rgba(255,255,255,0.2);">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title text-white" id="exportModalLabel">
-                        <i class="bi bi-download me-2"></i>Download Data CSV
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+        <!-- Export Modal -->
+        <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content"
+                    style="background: linear-gradient(135deg, #134e4a 0%, #166534 100%); border: 1px solid rgba(255,255,255,0.2);">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title text-white" id="exportModalLabel">
+                            <i class="bi bi-download me-2"></i>Download Data CSV
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <form action="{{ route('monitoring.export', $userDevice->id) }}" method="POST">
+                        @csrf
+                        <div class="modal-body">
+                            <p class="text-white-50 mb-4">Pilih rentang tanggal untuk data yang ingin di-download:</p>
+
+                            <div class="mb-3">
+                                <label class="form-label text-white">
+                                    <i class="bi bi-calendar-event me-1"></i> Tanggal Mulai
+                                </label>
+                                <input type="date" name="start_date"
+                                    class="form-control bg-dark text-white border-secondary"
+                                    value="{{ date('Y-m-d', strtotime('-7 days')) }}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-white">
+                                    <i class="bi bi-calendar-check me-1"></i> Tanggal Akhir
+                                </label>
+                                <input type="date" name="end_date" class="form-control bg-dark text-white border-secondary"
+                                    value="{{ date('Y-m-d') }}" required>
+                            </div>
+
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button" class="btn btn-sm btn-outline-light" onclick="setDateRange(7)">7
+                                    Hari</button>
+                                <button type="button" class="btn btn-sm btn-outline-light" onclick="setDateRange(30)">30
+                                    Hari</button>
+                                <button type="button" class="btn btn-sm btn-outline-light" onclick="setDateRange(90)">3
+                                    Bulan</button>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn" style="background: var(--primary-gradient); color: #fff;">
+                                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Download CSV
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <form action="{{ route('monitoring.export', $userDevice->id) }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        <p class="text-white-50 mb-4">Pilih rentang tanggal untuk data yang ingin di-download:</p>
-
-                        <div class="mb-3">
-                            <label class="form-label text-white">
-                                <i class="bi bi-calendar-event me-1"></i> Tanggal Mulai
-                            </label>
-                            <input type="date" name="start_date"
-                                class="form-control bg-dark text-white border-secondary"
-                                value="{{ date('Y-m-d', strtotime('-7 days')) }}" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label text-white">
-                                <i class="bi bi-calendar-check me-1"></i> Tanggal Akhir
-                            </label>
-                            <input type="date" name="end_date" class="form-control bg-dark text-white border-secondary"
-                                value="{{ date('Y-m-d') }}" required>
-                        </div>
-
-                        <div class="d-flex gap-2 flex-wrap">
-                            <button type="button" class="btn btn-sm btn-outline-light" onclick="setDateRange(7)">7
-                                Hari</button>
-                            <button type="button" class="btn btn-sm btn-outline-light" onclick="setDateRange(30)">30
-                                Hari</button>
-                            <button type="button" class="btn btn-sm btn-outline-light" onclick="setDateRange(90)">3
-                                Bulan</button>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0">
-                        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn" style="background: var(--primary-gradient); color: #fff;">
-                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Download CSV
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
-    </div>
 
-    <script>
-        // Setup CSRF token for AJAX requests
-        const csrfToken = '{{ csrf_token() }}';
-        const userDeviceId = {{ $userDevice->id }};
+        <script>
+            // Setup CSRF token for AJAX requests
+            const csrfToken = '{{ csrf_token() }}';
+            const userDeviceId = {{ $userDevice->id }};
 
-        // Set output ON/OFF (for buttons)
-        function setOutput(outputId, isOn) {
-            const url = `/monitoring/device/${userDeviceId}/output/${outputId}/toggle`;
+            // Set output ON/OFF (for buttons)
+            function setOutput(outputId, isOn) {
+                const url = `/monitoring/device/${userDeviceId}/output/${outputId}/toggle`;
 
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({ value: isOn })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Update button styles
-                        const btnOn = document.getElementById(`btn-on-${outputId}`);
-                        const btnOff = document.getElementById(`btn-off-${outputId}`);
-                        const statusEl = document.getElementById(`output-status-${outputId}`);
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ value: isOn })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update button styles
+                            const btnOn = document.getElementById(`btn-on-${outputId}`);
+                            const btnOff = document.getElementById(`btn-off-${outputId}`);
+                            const statusEl = document.getElementById(`output-status-${outputId}`);
 
-                        if (isOn) {
-                            btnOn.className = 'btn btn-sm btn-success';
-                            btnOff.className = 'btn btn-sm btn-outline-danger';
+                            if (isOn) {
+                                btnOn.className = 'btn btn-sm btn-success';
+                                btnOff.className = 'btn btn-sm btn-outline-danger';
+                            } else {
+                                btnOn.className = 'btn btn-sm btn-outline-success';
+                                btnOff.className = 'btn btn-sm btn-danger';
+                            }
+
+                            if (statusEl) {
+                                statusEl.textContent = isOn ? 'ON' : 'OFF';
+                                statusEl.className = isOn ? 'output-status on' : 'output-status off';
+                            }
+
+                            // Show success feedback
+                            const card = document.getElementById(`output-card-${outputId}`);
+                            if (card) {
+                                card.style.borderColor = '#22c55e';
+                                setTimeout(() => {
+                                    card.style.borderColor = 'rgba(250, 204, 21, 0.3)';
+                                }, 500);
+                            }
+
+                            console.log('Output updated:', data.message);
                         } else {
-                            btnOn.className = 'btn btn-sm btn-outline-success';
-                            btnOff.className = 'btn btn-sm btn-danger';
+                            console.error('Failed to update output');
+                            alert('Gagal mengupdate output. Silakan coba lagi.');
                         }
-
-                        if (statusEl) {
-                            statusEl.textContent = isOn ? 'ON' : 'OFF';
-                            statusEl.className = isOn ? 'output-status on' : 'output-status off';
-                        }
-
-                        // Show success feedback
-                        const card = document.getElementById(`output-card-${outputId}`);
-                        if (card) {
-                            card.style.borderColor = '#22c55e';
-                            setTimeout(() => {
-                                card.style.borderColor = 'rgba(250, 204, 21, 0.3)';
-                            }, 500);
-                        }
-
-                        console.log('Output updated:', data.message);
-                    } else {
-                        console.error('Failed to update output');
-                        alert('Gagal mengupdate output. Silakan coba lagi.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Terjadi kesalahan saat mengupdate output.');
-                });
-        }
-
-        // Toggle output (AJAX) - kept for range sliders
-        function toggleOutput(outputId, value) {
-            const url = `/monitoring/device/${userDeviceId}/output/${outputId}/toggle`;
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({ value: value })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Update status text for boolean
-                        const statusEl = document.getElementById(`output-status-${outputId}`);
-                        if (statusEl) {
-                            const isOn = data.new_value == 1 || data.new_value === true;
-                            statusEl.textContent = isOn ? 'ON' : 'OFF';
-                            statusEl.className = isOn ? 'output-status on' : 'output-status off';
-                        }
-
-                        // Show success feedback
-                        const card = document.getElementById(`output-card-${outputId}`);
-                        if (card) {
-                            card.style.borderColor = '#22c55e';
-                            setTimeout(() => {
-                                card.style.borderColor = 'rgba(250, 204, 21, 0.3)';
-                            }, 500);
-                        }
-
-                        console.log('Output updated:', data.message);
-                    } else {
-                        console.error('Failed to update output');
-                        alert('Gagal mengupdate output. Silakan coba lagi.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Terjadi kesalahan saat mengupdate output.');
-                });
-        }
-
-        // Update range value display
-        function updateRangeValue(outputId, value, unit) {
-            const valueEl = document.getElementById(`output-value-${outputId}`);
-            if (valueEl) {
-                valueEl.textContent = value + unit;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat mengupdate output.');
+                    });
             }
-        }
 
-        function setDateRange(days) {
-            const endDate = new Date();
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - days);
+            // Toggle output (AJAX) - kept for range sliders
+            function toggleOutput(outputId, value) {
+                const url = `/monitoring/device/${userDeviceId}/output/${outputId}/toggle`;
 
-            document.querySelector('input[name="start_date"]').value = startDate.toISOString().split('T')[0];
-            document.querySelector('input[name="end_date"]').value = endDate.toISOString().split('T')[0];
-        }
-    </script>
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ value: value })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update status text for boolean
+                            const statusEl = document.getElementById(`output-status-${outputId}`);
+                            if (statusEl) {
+                                const isOn = data.new_value == 1 || data.new_value === true;
+                                statusEl.textContent = isOn ? 'ON' : 'OFF';
+                                statusEl.className = isOn ? 'output-status on' : 'output-status off';
+                            }
+
+                            // Show success feedback
+                            const card = document.getElementById(`output-card-${outputId}`);
+                            if (card) {
+                                card.style.borderColor = '#22c55e';
+                                setTimeout(() => {
+                                    card.style.borderColor = 'rgba(250, 204, 21, 0.3)';
+                                }, 500);
+                            }
+
+                            console.log('Output updated:', data.message);
+                        } else {
+                            console.error('Failed to update output');
+                            alert('Gagal mengupdate output. Silakan coba lagi.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat mengupdate output.');
+                    });
+            }
+
+            // Update range value display
+            function updateRangeValue(outputId, value, unit) {
+                const valueEl = document.getElementById(`output-value-${outputId}`);
+                if (valueEl) {
+                    valueEl.textContent = value + unit;
+                }
+            }
+
+            function setDateRange(days) {
+                const endDate = new Date();
+                const startDate = new Date();
+                startDate.setDate(startDate.getDate() - days);
+
+                document.querySelector('input[name="start_date"]').value = startDate.toISOString().split('T')[0];
+                document.querySelector('input[name="end_date"]').value = endDate.toISOString().split('T')[0];
+            }
+        </script>
     @endif
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
