@@ -532,8 +532,8 @@
                                 <div class="col-md-5">
                                     <label class="form-label">MQTT Broker (WebSocket)</label>
                                     <input type="text" class="form-control form-control-glass" id="wsBroker"
-                                        value="wss://broker.hivemq.com:8884/mqtt"
-                                        placeholder="wss://broker.hivemq.com:8884/mqtt">
+                                        value="wss://smartagri.web.id:9001/mqtt"
+                                        placeholder="wss://smartagri.web.id:9001/mqtt">
                                 </div>
                                 <div class="col-md-5">
                                     <label class="form-label">Topic untuk Subscribe</label>
