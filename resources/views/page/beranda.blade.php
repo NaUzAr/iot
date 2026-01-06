@@ -712,7 +712,7 @@
                         <i class="bi bi-person-plus me-2"></i>Daftar Gratis
                     </a>
                     @else
-                    <a href="{{ route('dashboard') }}" class="btn btn-gradient px-4 py-2">
+                    <a href="{{ route('monitoring.index') }}" class="btn btn-gradient px-4 py-2">
                         <i class="bi bi-speedometer2 me-2"></i>Dashboard
                     </a>
                     @endguest
