@@ -298,8 +298,10 @@
                             <tr>
                                 <td class="fw-semibold">{{ $loop->iteration }}</td>
                                 <td>
-                                    <div class="fw-bold">{{ $device->name }}</div>
-                                    <small class="text-white-50">{{ $device->table_name }}</small>
+                                    <a href="{{ route('monitoring.show', $device->id) }}" class="text-decoration-none">
+                                        <div class="fw-bold text-white">{{ $device->name }}</div>
+                                        <small class="text-white-50">{{ $device->table_name }}</small>
+                                    </a>
                                 </td>
                                 <td>
                                     <span class="badge-type">

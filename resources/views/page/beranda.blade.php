@@ -510,6 +510,8 @@
                                                 class="bi bi-cpu me-2"></i>Manage Devices</a></li>
                                     <li><a class="dropdown-item" href="{{ route('admin.device.create') }}"><i
                                                 class="bi bi-plus-circle me-2"></i>Tambah Device</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('mqtt-tester.index') }}"><i
+                                                class="bi bi-broadcast me-2"></i>MQTT Tester</a></li>
                                 </ul>
                             </li>
                         @endif
