@@ -35,7 +35,52 @@ class AdminDeviceController extends Controller
     public function create()
     {
         $this->checkAdmin();
-        return view('admin.create_device');
+
+        // Device types
+        $deviceTypes = [
+            'aws' => 'Automatic Weather Station',
+            'greenhouse' => 'Greenhouse Controller',
+        ];
+
+        // Available sensors
+        $availableSensors = [
+            'temperature' => ['label' => 'Suhu', 'unit' => '°C'],
+            'humidity' => ['label' => 'Kelembaban Udara', 'unit' => '%'],
+            'soil_moisture' => ['label' => 'Kelembaban Tanah', 'unit' => '%'],
+            'rainfall' => ['label' => 'Curah Hujan', 'unit' => 'mm'],
+            'wind_speed' => ['label' => 'Kecepatan Angin', 'unit' => 'm/s'],
+            'wind_direction' => ['label' => 'Arah Angin', 'unit' => '°'],
+            'pressure' => ['label' => 'Tekanan Udara', 'unit' => 'hPa'],
+            'light' => ['label' => 'Intensitas Cahaya', 'unit' => 'lux'],
+            'uv' => ['label' => 'UV Index', 'unit' => ''],
+            'co2' => ['label' => 'CO2', 'unit' => 'ppm'],
+            'ph' => ['label' => 'pH Tanah', 'unit' => ''],
+            'ec' => ['label' => 'EC Tanah', 'unit' => 'mS/cm'],
+        ];
+
+        // Available outputs
+        $availableOutputs = [
+            'relay' => ['label' => 'Relay', 'type' => 'boolean', 'unit' => ''],
+            'pump' => ['label' => 'Pompa Air', 'type' => 'boolean', 'unit' => ''],
+            'fan' => ['label' => 'Kipas', 'type' => 'boolean', 'unit' => ''],
+            'valve' => ['label' => 'Katup Air', 'type' => 'boolean', 'unit' => ''],
+            'dimmer' => ['label' => 'Dimmer', 'type' => 'percentage', 'unit' => '%'],
+            'servo' => ['label' => 'Servo', 'type' => 'number', 'unit' => '°'],
+        ];
+
+        // Default sensors per device type
+        $defaultSensors = [
+            'aws' => ['temperature' => 1, 'humidity' => 1, 'rainfall' => 1, 'wind_speed' => 1, 'wind_direction' => 1],
+            'greenhouse' => ['temperature' => 1, 'humidity' => 1, 'soil_moisture' => 1, 'light' => 1],
+        ];
+
+        // Default outputs per device type
+        $defaultOutputs = [
+            'aws' => [],
+            'greenhouse' => ['pump' => 1, 'fan' => 1],
+        ];
+
+        return view('admin.create_device', compact('deviceTypes', 'availableSensors', 'availableOutputs', 'defaultSensors', 'defaultOutputs'));
     }
 
     // 3. PROSES SIMPAN DEVICE BARU (STORE)
