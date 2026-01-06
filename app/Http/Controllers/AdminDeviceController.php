@@ -129,6 +129,7 @@ class AdminDeviceController extends Controller
     public function showMonitoring($id)
     {
         $this->checkAdmin();
+        $isAdminView = true;
 
         $device = Device::with(['sensors', 'outputs'])->findOrFail($id);
         $sensors = $device->sensors;
@@ -162,6 +163,6 @@ class AdminDeviceController extends Controller
             $logData = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
         }
 
-        return view('admin.monitoring', compact('device', 'sensors', 'outputs', 'logData', 'chartData', 'latestData'));
+        return view('monitoring.show', compact('device', 'sensors', 'outputs', 'logData', 'chartData', 'latestData', 'isAdminView'));
     }
 }

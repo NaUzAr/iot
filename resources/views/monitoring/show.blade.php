@@ -400,9 +400,15 @@
                 <i class="bi bi-tree-fill me-2"></i>SmartAgri
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{{ route('monitoring.index') }}">
-                    <i class="bi bi-arrow-left me-1"></i> Kembali ke Monitoring
-                </a>
+                @if($isAdminView ?? false)
+                    <a class="nav-link" href="{{ route('admin.devices.index') }}">
+                        <i class="bi bi-arrow-left me-1"></i> Kembali ke Device Manager
+                    </a>
+                @else
+                    <a class="nav-link" href="{{ route('monitoring.index') }}">
+                        <i class="bi bi-arrow-left me-1"></i> Kembali ke Monitoring
+                    </a>
+                @endif
             </div>
         </div>
     </nav>
@@ -413,7 +419,11 @@
             <div>
                 <h1 class="device-title">
                     <i class="bi {{ $device->type === 'aws' ? 'bi-cloud-sun' : 'bi-flower1' }} me-2"></i>
-                    {{ $userDevice->custom_name }}
+                    @if($isAdminView ?? false)
+                        {{ $device->name }}
+                    @else
+                        {{ $userDevice->custom_name }}
+                    @endif
                 </h1>
                 <p class="text-white-50 mb-0 mt-1">
                     <span class="live-dot me-2"></span>
@@ -425,12 +435,19 @@
                 </p>
             </div>
             <div class="d-flex gap-2 align-items-center">
+                @if($isAdminView ?? false)
+                    <span class="device-type-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                        <i class="bi bi-shield-check me-1"></i> Admin View
+                    </span>
+                @endif
                 <span class="device-type-badge">
                     {{ strtoupper($device->type ?? 'DEVICE') }}
                 </span>
-                <button type="button" class="btn-glass" data-bs-toggle="modal" data-bs-target="#exportModal">
-                    <i class="bi bi-download me-1"></i> Download CSV
-                </button>
+                @if(!($isAdminView ?? false))
+                    <button type="button" class="btn-glass" data-bs-toggle="modal" data-bs-target="#exportModal">
+                        <i class="bi bi-download me-1"></i> Download CSV
+                    </button>
+                @endif
             </div>
         </div>
 
@@ -461,7 +478,7 @@
             </div>
         @endif
 
-        @if($outputs->count() > 0)
+        @if($outputs->count() > 0 && !($isAdminView ?? false))
             <!-- Output Control Panel -->
             <div class="glass-card"
                 style="background: rgba(250, 204, 21, 0.05); border-color: rgba(250, 204, 21, 0.2); margin-top: 1.5rem;">
@@ -727,6 +744,7 @@
         @endif
     </div>
 
+    @if(!($isAdminView ?? false))
     <!-- Export Modal -->
     <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -901,6 +919,7 @@
             document.querySelector('input[name="end_date"]').value = endDate.toISOString().split('T')[0];
         }
     </script>
+    @endif
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
     @include('partials.pwa-scripts')
