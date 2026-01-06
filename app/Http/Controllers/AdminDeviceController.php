@@ -192,6 +192,7 @@ class AdminDeviceController extends Controller
 
         // G. Simpan Outputs ke device_outputs
         if ($request->has('outputs')) {
+            $outputCounter = [];
             foreach ($request->outputs as $output) {
                 if (empty($output['type']))
                     continue;
@@ -200,12 +201,24 @@ class AdminDeviceController extends Controller
                 if (!isset($availableOutputs[$type]))
                     continue;
 
+                // Count duplicates to generate unique names
+                if (!isset($outputCounter[$type])) {
+                    $outputCounter[$type] = 0;
+                }
+                $outputCounter[$type]++;
+
+                // Generate output name (e.g., pump, pump_2)
+                $outputName = $outputCounter[$type] > 1 ? "{$type}_{$outputCounter[$type]}" : $type;
+
                 $outputConfig = $availableOutputs[$type];
                 $label = !empty($output['label']) ? $output['label'] : $outputConfig['label'];
+                if ($outputCounter[$type] > 1 && empty($output['label'])) {
+                    $label .= " {$outputCounter[$type]}";
+                }
 
                 \App\Models\DeviceOutput::create([
                     'device_id' => $device->id,
-                    'output_name' => $type . '_' . uniqid(),
+                    'output_name' => $outputName,
                     'output_label' => $label,
                     'output_type' => $outputConfig['type'],
                     'unit' => $outputConfig['unit'],
