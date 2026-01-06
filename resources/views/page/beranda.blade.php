@@ -687,7 +687,7 @@
                             </div>
                             <div>
                                 <h6 class="text-white mb-0">WhatsApp</h6>
-                                <p class="text-white-50 small mb-0">+62 812-3456-7890</p>
+                                <p class="text-white-50 small mb-0">xxx</p>
                             </div>
                         </div>
                     </div>
@@ -699,7 +699,7 @@
                             </div>
                             <div>
                                 <h6 class="text-white mb-0">Email</h6>
-                                <p class="text-white-50 small mb-0">info@smartagri.id</p>
+                                <p class="text-white-50 small mb-0">xxx</p>
                             </div>
                         </div>
                     </div>
@@ -711,7 +711,7 @@
                             </div>
                             <div>
                                 <h6 class="text-white mb-0">Lokasi</h6>
-                                <p class="text-white-50 small mb-0">Jakarta, Indonesia</p>
+                                <p class="text-white-50 small mb-0">xxx</p>
                             </div>
                         </div>
                     </div>
