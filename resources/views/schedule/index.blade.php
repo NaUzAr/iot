@@ -162,7 +162,12 @@
                 <!-- SENSOR-BASED AUTOMATION -->
                 <div class="glass-card">
                     <h5 class="mb-3"><i class="bi bi-speedometer me-2"></i>Sensor Automation</h5>
-                    <p class="text-white-50">Sensor: <strong>{{ $output->automationSensor->sensor_label }}</strong></p>
+                    @if($output->automationSensor)
+                        <p class="text-white-50">Sensor: <strong>{{ $output->automationSensor->sensor_label }}</strong></p>
+                    @else
+                        <p class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Sensor belum dikonfigurasi.
+                            Silakan pilih sensor di halaman output settings.</p>
+                    @endif
 
                     <form action="{{ route('schedule.sensor.store', [$userDevice->id, $output->id]) }}" method="POST">
                         @csrf
