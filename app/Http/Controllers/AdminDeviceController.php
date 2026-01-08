@@ -23,6 +23,20 @@ class AdminDeviceController extends Controller
         }
     }
 
+    // Helper: Find sensor ID by name from device's sensors
+    private function findSensorId($deviceId, $sensorName)
+    {
+        if (empty($sensorName)) {
+            return null;
+        }
+
+        $sensor = \App\Models\DeviceSensor::where('device_id', $deviceId)
+            ->where('sensor_name', $sensorName)
+            ->first();
+
+        return $sensor?->id;
+    }
+
     // 1. HALAMAN LIST DEVICE (INDEX)
     public function index()
     {
@@ -224,6 +238,7 @@ class AdminDeviceController extends Controller
                     'unit' => $outputConfig['unit'],
                     'automation_mode' => $output['automation_mode'] ?? 'none',
                     'max_schedules' => $output['max_schedules'] ?? 8,
+                    'automation_sensor_id' => $this->findSensorId($device->id, $output['automation_sensor'] ?? null),
                 ]);
             }
         }
