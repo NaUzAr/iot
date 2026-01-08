@@ -163,61 +163,52 @@
                 <div class="glass-card">
                     <h5 class="mb-3"><i class="bi bi-speedometer me-2"></i>Sensor Automation</h5>
 
-                    @if($output->automationSensor)
-                        <form action="{{ route('schedule.sensor.store', [$userDevice->id, $output->id]) }}" method="POST">
-                            @csrf
-                            <!-- Hidden sensor from automationSensor -->
-                            <input type="hidden" name="sensor" value="{{ $output->automationSensor->sensor_name }}">
-
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Sensor</label>
-                                    <input type="text" class="form-control"
-                                        value="{{ $output->automationSensor->sensor_label }} ({{ $output->automationSensor->unit }})"
-                                        readonly>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Operator</label>
-                                    <select name="operator" class="form-select" required>
-                                        <option value=">">Greater Than (>)</option>
-                                        <option value="<">Less Than (<)< /option>
-                                        <option value=">=">Greater or Equal (>=)</option>
-                                        <option value="<=">Less or Equal (<=)< /option>
-                                        <option value="==">Equal (==)</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Threshold</label>
-                                    <input type="number" name="threshold" class="form-control" step="0.01" placeholder="30.5"
-                                        required>
-                                </div>
+                    <form action="{{ route('schedule.sensor.store', [$userDevice->id, $output->id]) }}" method="POST">
+                        @csrf
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Pilih Sensor</label>
+                                <select name="sensor" class="form-select" required>
+                                    <option value="">-- Pilih Sensor --</option>
+                                    @foreach($device->sensors as $sensor)
+                                        <option value="{{ $sensor->sensor_name }}">{{ $sensor->sensor_label }} ({{ $sensor->unit }})</option>
+                                    @endforeach
+                                </select>
                             </div>
-
-                            <div class="row g-3 mt-2">
-                                <div class="col-md-6">
-                                    <label class="form-label">Value ON (saat kondisi TRUE)</label>
-                                    <input type="number" name="action_on" class="form-control" step="0.01" value="1" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Value OFF (saat kondisi FALSE)</label>
-                                    <input type="number" name="action_off" class="form-control" step="0.01" value="0" required>
-                                </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Operator</label>
+                                <select name="operator" class="form-select" required>
+                                    <option value=">">Greater Than (>)</option>
+                                    <option value="<">Less Than (<)</option>
+                                    <option value=">=">Greater or Equal (>=)</option>
+                                    <option value="<=">Less or Equal (<=)</option>
+                                    <option value="==">Equal (==)</option>
+                                </select>
                             </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Threshold</label>
+                                <input type="number" name="threshold" class="form-control" step="0.01" placeholder="30.5" required>
+                            </div>
+                        </div>
 
-                            <button type="submit" class="btn btn-primary mt-3">
-                                <i class="bi bi-send me-1"></i> Kirim ke Device
-                            </button>
-                        </form>
-                        <div class="alert alert-info mt-3 mb-0">
-                            <i class="bi bi-info-circle me-1"></i> Rule akan dikirim ke device. Device akan monitor sensor dan
-                            control output otomatis.
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Value ON (saat kondisi TRUE)</label>
+                                <input type="number" name="action_on" class="form-control" step="0.01" value="1" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Value OFF (saat kondisi FALSE)</label>
+                                <input type="number" name="action_off" class="form-control" step="0.01" value="0" required>
+                            </div>
                         </div>
-                    @else
-                        <div class="alert alert-warning">
-                            <i class="bi bi-exclamation-triangle me-1"></i> Sensor belum dikonfigurasi untuk output ini.
-                            Silakan hubungi admin untuk mengatur sensor automation di pengaturan device.
-                        </div>
-                    @endif
+
+                        <button type="submit" class="btn btn-primary mt-3">
+                            <i class="bi bi-send me-1"></i> Kirim ke Device
+                        </button>
+                    </form>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="bi bi-info-circle me-1"></i> Rule akan dikirim ke device. Device akan monitor sensor dan control output otomatis.
+                    </div>
                 </div>
             @endif
         </div>
