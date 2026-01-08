@@ -111,11 +111,13 @@ class MqttScheduleService
 
     /**
      * Send sensor-based rule to device
+     * Format: <set,output,operator.threshold>
+     * Contoh: <set,pump,>.30>
      * 
      * @param string $mqttTopic MQTT topic dari device (dari Admin Panel)
      * @param string $deviceToken Token device untuk identifikasi
      * @param string $outputName Nama output
-     * @param array $rule Aturan sensor
+     * @param array $rule Aturan sensor (operator, threshold)
      */
     public function sendSensorRule(string $mqttTopic, string $deviceToken, string $outputName, array $rule): bool
     {
@@ -123,19 +125,19 @@ class MqttScheduleService
             $mqtt = $this->connect();
             $topic = "{$mqttTopic}/control";
 
-            $message = json_encode([
-                'type' => 'sensor_rule',
-                'token' => $deviceToken,
-                'output' => $outputName,
-                'rule' => $rule,
-                'timestamp' => now()->toIso8601String(),
-            ]);
+            // Format simple: <set,output,operator.threshold>
+            $message = sprintf(
+                '<set,%s,%s.%s>',
+                $outputName,
+                $rule['operator'],
+                $rule['threshold']
+            );
 
             $mqtt->publish($topic, $message, 1);
             $mqtt->disconnect();
 
             Log::info("Sensor rule sent to device via {$topic}", [
-                'token' => $deviceToken,
+                'message' => $message,
                 'output' => $outputName,
             ]);
 

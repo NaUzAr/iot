@@ -99,19 +99,13 @@ class ScheduleController extends Controller
         $output = DeviceOutput::findOrFail($outputId);
 
         $validated = $request->validate([
-            'sensor' => 'required|string',
             'operator' => 'required|in:>,<,>=,<=,==',
             'threshold' => 'required|numeric',
-            'action_on' => 'required|numeric',
-            'action_off' => 'required|numeric',
         ]);
 
         $rule = [
-            'sensor' => $validated['sensor'],
             'operator' => $validated['operator'],
             'threshold' => (float) $validated['threshold'],
-            'action_on' => (float) $validated['action_on'],
-            'action_off' => (float) $validated['action_off'],
         ];
 
         $success = $this->mqttService->sendSensorRule(
