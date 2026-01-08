@@ -106,6 +106,11 @@ class ScheduleController extends Controller
             'action_off' => 'required|numeric',
         ]);
 
+        // Check if sensor is configured
+        if (!$output->automationSensor) {
+            return back()->with('error', 'Sensor belum dikonfigurasi untuk output ini. Silakan pilih sensor di halaman settings.');
+        }
+
         $rule = [
             'sensor' => $output->automationSensor->sensor_name,
             'operator' => $validated['operator'],
