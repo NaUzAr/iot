@@ -66,28 +66,62 @@ class MqttScheduleService
 
     /**
      * Send single time-based schedule to device
-     * Format: <jdw{id}#{output}#{on}#{off}#>
-     * Contoh: <jdw1#pump_1#06:00#18:00#>
+     * Supports different formats based on automation_mode:
+     * - time: <jdw{id}#{output}#{on}#{off}#>
+     * - time_days: <jdw{id}#{output}#{on}#{off}#{days}#>
+     * - time_days_sector: <jdw{id}#{output}#{on}#{off}#{days}#{sector}#>
      * 
      * @param string $mqttTopic MQTT topic dari device (dari Admin Panel)
      * @param string $deviceToken Token device untuk identifikasi
      * @param string $outputName Nama output yang dijadwalkan
-     * @param array $schedule Single jadwal (id, on, off)
+     * @param array $schedule Single jadwal (id, on, off, days?, sector?)
+     * @param string $automationMode Mode automation (time, time_days, time_days_sector)
      */
-    public function sendSingleTimeSchedule(string $mqttTopic, string $deviceToken, string $outputName, array $schedule): bool
+    public function sendSingleTimeSchedule(string $mqttTopic, string $deviceToken, string $outputName, array $schedule, string $automationMode = 'time'): bool
     {
         try {
             $mqtt = $this->connect();
             $topic = "{$mqttTopic}/control";
 
-            // Format simple: <jdw{id}#{output}#{on}#{off}#>
-            $message = sprintf(
-                '<jdw%d#%s#%s#%s#>',
-                $schedule['id'],
-                $outputName,
-                $schedule['on'],
-                $schedule['off']
-            );
+            // Build message based on automation mode
+            switch ($automationMode) {
+                case 'time_days_sector':
+                    // Format: <jdw{id}#{output}#{on}#{off}#{days}#{sector}#>
+                    $message = sprintf(
+                        '<jdw%d#%s#%s#%s#%s#%d#>',
+                        $schedule['id'],
+                        $outputName,
+                        $schedule['on'],
+                        $schedule['off'],
+                        $schedule['days'] ?? '1234567',
+                        $schedule['sector'] ?? 1
+                    );
+                    break;
+
+                case 'time_days':
+                    // Format: <jdw{id}#{output}#{on}#{off}#{days}#>
+                    $message = sprintf(
+                        '<jdw%d#%s#%s#%s#%s#>',
+                        $schedule['id'],
+                        $outputName,
+                        $schedule['on'],
+                        $schedule['off'],
+                        $schedule['days'] ?? '1234567'
+                    );
+                    break;
+
+                case 'time':
+                default:
+                    // Format: <jdw{id}#{output}#{on}#{off}#>
+                    $message = sprintf(
+                        '<jdw%d#%s#%s#%s#>',
+                        $schedule['id'],
+                        $outputName,
+                        $schedule['on'],
+                        $schedule['off']
+                    );
+                    break;
+            }
 
             $mqtt->publish($topic, $message, 1); // QoS 1
             $mqtt->disconnect();
@@ -96,6 +130,7 @@ class MqttScheduleService
                 'message' => $message,
                 'output' => $outputName,
                 'slot_id' => $schedule['id'],
+                'mode' => $automationMode,
             ]);
 
             return true;

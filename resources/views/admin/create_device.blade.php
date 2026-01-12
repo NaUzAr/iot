@@ -416,7 +416,7 @@
             refreshAutomationSensorDropdowns(); // Refresh automation sensor dropdowns
         }
 
-        function addOutputRow(outputKey = '', customLabel = '', autoMode = 'none', maxSchedules = 8, sensorId = '') {
+        function addOutputRow(outputKey = '', customLabel = '', autoMode = 'none', maxSchedules = 8, maxSectors = 1, sensorId = '') {
             outputCounter++;
             const container = document.getElementById('outputContainer');
             const row = document.createElement('div');
@@ -424,37 +424,46 @@
             row.id = `outputRow_${outputCounter}`;
 
             const sensorOptions = getAddedSensorOptions(sensorId);
+            const isTimeMode = ['time', 'time_days', 'time_days_sector'].includes(autoMode);
+            const hasSector = autoMode === 'time_days_sector';
 
             row.innerHTML = `
             <div class="row align-items-start g-2 mb-2">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label small text-white-50">Output Type</label>
                     <select class="form-select output-select" name="outputs[${outputCounter}][type]" onchange="updateSubmitButton()">
                         ${getOutputOptions(outputKey)}
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label small text-white-50">Label (opsional)</label>
+                <div class="col-md-2">
+                    <label class="form-label small text-white-50">Label</label>
                     <input type="text" class="form-control output-label-input" name="outputs[${outputCounter}][label]" 
-                           placeholder="Label custom" value="${customLabel}">
+                           placeholder="Label" value="${customLabel}">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small text-white-50">Automation</label>
                     <select class="form-select" name="outputs[${outputCounter}][automation_mode]" 
                             onchange="toggleAutomationFields(${outputCounter}, this.value)">
                         <option value="none" ${autoMode === 'none' ? 'selected' : ''}>None</option>
-                        <option value="time" ${autoMode === 'time' ? 'selected' : ''}>Time</option>
+                        <option value="time" ${autoMode === 'time' ? 'selected' : ''}>Time Only</option>
+                        <option value="time_days" ${autoMode === 'time_days' ? 'selected' : ''}>Time + Days</option>
+                        <option value="time_days_sector" ${autoMode === 'time_days_sector' ? 'selected' : ''}>Time + Days + Sector</option>
                         <option value="sensor" ${autoMode === 'sensor' ? 'selected' : ''}>Sensor</option>
                     </select>
                 </div>
-                <div class="col-md-2 automation-time-fields" id="timeFields_${outputCounter}" style="display: ${autoMode === 'time' ? 'block' : 'none'}">
-                    <label class="form-label small text-white-50">Max Schedules</label>
+                <div class="col-md-1 automation-time-fields" id="timeFields_${outputCounter}" style="display: ${isTimeMode ? 'block' : 'none'}">
+                    <label class="form-label small text-white-50">Slots</label>
                     <input type="number" class="form-control" name="outputs[${outputCounter}][max_schedules]" 
                            value="${maxSchedules}" min="1" max="20">
                 </div>
-                <div class="col-md-2 automation-sensor-fields" id="sensorFields_${outputCounter}" style="display: ${autoMode === 'sensor' ? 'block' : 'none'}">
+                <div class="col-md-1 automation-sector-fields" id="sectorFields_${outputCounter}" style="display: ${hasSector ? 'block' : 'none'}">
+                    <label class="form-label small text-white-50">Sectors</label>
+                    <input type="number" class="form-control" name="outputs[${outputCounter}][max_sectors]" 
+                           value="${maxSectors}" min="1" max="10">
+                </div>
+                <div class="col-md-2 automation-sensor-fields" id="sensorSelectFields_${outputCounter}" style="display: ${autoMode === 'sensor' ? 'block' : 'none'}">
                     <label class="form-label small text-white-50">Sensor</label>
-                    <select class="form-select" name="outputs[${outputCounter}][automation_sensor_id]">
+                    <select class="form-select automation-sensor-select" name="outputs[${outputCounter}][automation_sensor_id]">
                         <option value="">-- Select --</option>
                         ${sensorOptions}
                     </select>
@@ -507,10 +516,15 @@
 
         function toggleAutomationFields(index, mode) {
             const timeFields = document.getElementById(`timeFields_${index}`);
-            const sensorFields = document.getElementById(`sensorFields_${index}`);
+            const sectorFields = document.getElementById(`sectorFields_${index}`);
+            const sensorSelectFields = document.getElementById(`sensorSelectFields_${index}`);
 
-            timeFields.style.display = mode === 'time' ? 'block' : 'none';
-            sensorFields.style.display = mode === 'sensor' ? 'block' : 'none';
+            const isTimeMode = ['time', 'time_days', 'time_days_sector'].includes(mode);
+            const hasSector = mode === 'time_days_sector';
+
+            timeFields.style.display = isTimeMode ? 'block' : 'none';
+            sectorFields.style.display = hasSector ? 'block' : 'none';
+            sensorSelectFields.style.display = mode === 'sensor' ? 'block' : 'none';
         }
 
         function removeSensorRow(id) {

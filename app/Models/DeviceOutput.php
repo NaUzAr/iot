@@ -19,6 +19,7 @@ class DeviceOutput extends Model
         'current_value',
         'automation_mode',
         'max_schedules',
+        'max_sectors',
         'automation_sensor_id'
     ];
 

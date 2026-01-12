@@ -186,6 +186,7 @@ class AdminDeviceController extends Controller
                     'unit' => $outputConfig['unit'],
                     'automation_mode' => $output['automation_mode'] ?? 'none',
                     'max_schedules' => $output['max_schedules'] ?? 8,
+                    'max_sectors' => $output['max_sectors'] ?? 1,
                     'automation_sensor_id' => $this->findSensorId($device->id, $output['automation_sensor'] ?? null),
                 ]);
             }

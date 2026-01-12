@@ -44,6 +44,7 @@ class ScheduleController extends Controller
 
     /**
      * Send single time schedule to device
+     * Supports modes: time, time_days, time_days_sector
      */
     public function storeTimeSchedules(Request $request, $userDeviceId, $outputId)
     {
@@ -58,6 +59,8 @@ class ScheduleController extends Controller
             'slot_id' => 'required|integer|min:1',
             'on_time' => 'required|date_format:H:i',
             'off_time' => 'required|date_format:H:i',
+            'days' => 'nullable|string|max:7',
+            'sector' => 'nullable|integer|min:1',
         ]);
 
         $schedule = [
@@ -66,11 +69,22 @@ class ScheduleController extends Controller
             'off' => $validated['off_time'],
         ];
 
+        // Add days if provided (for time_days and time_days_sector modes)
+        if (!empty($validated['days'])) {
+            $schedule['days'] = $validated['days'];
+        }
+
+        // Add sector if provided (for time_days_sector mode)
+        if (!empty($validated['sector'])) {
+            $schedule['sector'] = $validated['sector'];
+        }
+
         $success = $this->mqttService->sendSingleTimeSchedule(
             $device->mqtt_topic,
             $device->token,
             $output->output_name,
-            $schedule
+            $schedule,
+            $output->automation_mode
         );
 
         if ($success) {

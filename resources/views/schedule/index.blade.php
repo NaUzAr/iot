@@ -47,6 +47,60 @@
             background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             border: none;
         }
+
+        .day-checkbox {
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .day-checkbox input[type="checkbox"] {
+            display: none;
+        }
+
+        .day-checkbox label {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .day-checkbox input[type="checkbox"]:checked+label {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border-color: #22c55e;
+        }
+
+        .schedule-slot {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .form-control,
+        .form-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #22c55e;
+            color: #fff;
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+        }
+
+        .form-select option {
+            background: #166534;
+            color: #fff;
+        }
     </style>
 </head>
 
@@ -57,7 +111,7 @@
                 <div>
                     <h3><i class="bi bi-calendar-check me-2"></i>{{ $output->output_label }} - Schedule</h3>
                     <p class="text-white-50 mb-0">Device: {{ $device->name }} | Mode:
-                        {{ ucfirst($output->automation_mode) }}
+                        {{ ucfirst(str_replace('_', ' + ', $output->automation_mode)) }}
                     </p>
                 </div>
                 <a href="{{ route('monitoring.show', $userDevice->id) }}" class="btn-glass">
@@ -72,32 +126,84 @@
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
 
-            @if($output->automation_mode === 'time')
+            @if(in_array($output->automation_mode, ['time', 'time_days', 'time_days_sector']))
                 <!-- TIME-BASED SCHEDULE -->
                 <div class="glass-card">
-                    <h5 class="mb-3"><i class="bi bi-clock me-2"></i>Time Schedule (Max: {{ $output->max_schedules }} slots)
+                    <h5 class="mb-3">
+                        <i class="bi bi-clock me-2"></i>Time Schedule (Max: {{ $output->max_schedules }} slots)
+                        @if($output->automation_mode === 'time_days_sector')
+                            | Sectors: {{ $output->max_sectors ?? 1 }}
+                        @endif
                     </h5>
                     <div id="scheduleContainer">
                         @for($i = 0; $i < $output->max_schedules; $i++)
                             <div class="schedule-slot glass-card mb-3" id="slot-{{ $i }}">
                                 <div class="row g-3 align-items-end">
-                                    <div class="col-md-1">
+                                    <div class="col-12 col-lg-1">
                                         <strong class="text-white-50">Slot {{ $i + 1 }}</strong>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-6 col-lg-2">
                                         <label class="form-label small">ON Time</label>
                                         <input type="time" id="on_time_{{ $i }}" class="form-control">
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-6 col-lg-2">
                                         <label class="form-label small">OFF Time</label>
                                         <input type="time" id="off_time_{{ $i }}" class="form-control">
                                     </div>
-                                    <div class="col-md-3">
+
+                                    @if(in_array($output->automation_mode, ['time_days', 'time_days_sector']))
+                                        <div class="col-12 col-lg-4">
+                                            <label class="form-label small">Days</label>
+                                            <div class="d-flex flex-wrap">
+                                                <div class="day-checkbox">
+                                                    <input type="checkbox" id="day_{{ $i }}_1" value="1" checked>
+                                                    <label for="day_{{ $i }}_1">Sen</label>
+                                                </div>
+                                                <div class="day-checkbox">
+                                                    <input type="checkbox" id="day_{{ $i }}_2" value="2" checked>
+                                                    <label for="day_{{ $i }}_2">Sel</label>
+                                                </div>
+                                                <div class="day-checkbox">
+                                                    <input type="checkbox" id="day_{{ $i }}_3" value="3" checked>
+                                                    <label for="day_{{ $i }}_3">Rab</label>
+                                                </div>
+                                                <div class="day-checkbox">
+                                                    <input type="checkbox" id="day_{{ $i }}_4" value="4" checked>
+                                                    <label for="day_{{ $i }}_4">Kam</label>
+                                                </div>
+                                                <div class="day-checkbox">
+                                                    <input type="checkbox" id="day_{{ $i }}_5" value="5" checked>
+                                                    <label for="day_{{ $i }}_5">Jum</label>
+                                                </div>
+                                                <div class="day-checkbox">
+                                                    <input type="checkbox" id="day_{{ $i }}_6" value="6">
+                                                    <label for="day_{{ $i }}_6">Sab</label>
+                                                </div>
+                                                <div class="day-checkbox">
+                                                    <input type="checkbox" id="day_{{ $i }}_7" value="7">
+                                                    <label for="day_{{ $i }}_7">Min</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if($output->automation_mode === 'time_days_sector')
+                                        <div class="col-6 col-lg-1">
+                                            <label class="form-label small">Sector</label>
+                                            <select id="sector_{{ $i }}" class="form-select">
+                                                @for($s = 1; $s <= ($output->max_sectors ?? 1); $s++)
+                                                    <option value="{{ $s }}">{{ $s }}</option>
+                                                @endfor
+                                            </select>
+                                        </div>
+                                    @endif
+
+                                    <div class="col-6 col-lg-1">
                                         <button type="button" class="btn btn-primary w-100" onclick="sendSchedule({{ $i }})">
-                                            <i class="bi bi-send me-1"></i> Kirim Slot {{ $i + 1 }}
+                                            <i class="bi bi-send"></i>
                                         </button>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-12 col-lg-1">
                                         <span id="status_{{ $i }}" class="badge bg-secondary">Belum dikirim</span>
                                     </div>
                                 </div>
@@ -105,12 +211,17 @@
                         @endfor
                     </div>
                     <div class="alert alert-info mt-3 mb-0">
-                        <i class="bi bi-info-circle me-1"></i> Klik tombol "Kirim" pada setiap slot untuk mengirim jadwal ke
+                        <i class="bi bi-info-circle me-1"></i> Klik tombol kirim pada setiap slot untuk mengirim jadwal ke
                         device via MQTT.
+                        @if(in_array($output->automation_mode, ['time_days', 'time_days_sector']))
+                            <br><small>Hari: 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu, 7=Minggu</small>
+                        @endif
                     </div>
                 </div>
 
                 <script>
+                    const automationMode = '{{ $output->automation_mode }}';
+
                     async function sendSchedule(slotIndex) {
                         const onTime = document.getElementById(`on_time_${slotIndex}`).value;
                         const offTime = document.getElementById(`off_time_${slotIndex}`).value;
@@ -120,6 +231,28 @@
                         if (!onTime || !offTime) {
                             alert('Mohon isi ON Time dan OFF Time terlebih dahulu!');
                             return;
+                        }
+
+                        // Get days if applicable
+                        let days = '';
+                        if (['time_days', 'time_days_sector'].includes(automationMode)) {
+                            for (let d = 1; d <= 7; d++) {
+                                const checkbox = document.getElementById(`day_${slotIndex}_${d}`);
+                                if (checkbox && checkbox.checked) {
+                                    days += d;
+                                }
+                            }
+                            if (!days) {
+                                alert('Pilih minimal satu hari!');
+                                return;
+                            }
+                        }
+
+                        // Get sector if applicable
+                        let sector = null;
+                        if (automationMode === 'time_days_sector') {
+                            const sectorSelect = document.getElementById(`sector_${slotIndex}`);
+                            sector = sectorSelect ? sectorSelect.value : 1;
                         }
 
                         statusBadge.className = 'badge bg-warning';
@@ -136,7 +269,9 @@
                                 body: JSON.stringify({
                                     slot_id: slotIndex + 1,
                                     on_time: onTime,
-                                    off_time: offTime
+                                    off_time: offTime,
+                                    days: days || null,
+                                    sector: sector
                                 })
                             });
 
