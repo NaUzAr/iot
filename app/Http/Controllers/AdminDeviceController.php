@@ -50,49 +50,18 @@ class AdminDeviceController extends Controller
     {
         $this->checkAdmin();
 
-        // Device types
-        $deviceTypes = [
-            'aws' => 'Automatic Weather Station',
-            'greenhouse' => 'Greenhouse Controller',
-        ];
+        // Use Device model for configuration to keep things in sync
+        $deviceTypes = Device::getDeviceTypes();
+        $availableSensors = Device::getAvailableSensors();
+        $availableOutputs = Device::getAvailableOutputs();
 
-        // Available sensors
-        $availableSensors = [
-            'temperature' => ['label' => 'Suhu', 'unit' => '°C'],
-            'humidity' => ['label' => 'Kelembaban Udara', 'unit' => '%'],
-            'soil_moisture' => ['label' => 'Kelembaban Tanah', 'unit' => '%'],
-            'rainfall' => ['label' => 'Curah Hujan', 'unit' => 'mm'],
-            'wind_speed' => ['label' => 'Kecepatan Angin', 'unit' => 'm/s'],
-            'wind_direction' => ['label' => 'Arah Angin', 'unit' => '°'],
-            'pressure' => ['label' => 'Tekanan Udara', 'unit' => 'hPa'],
-            'light' => ['label' => 'Intensitas Cahaya', 'unit' => 'lux'],
-            'uv' => ['label' => 'UV Index', 'unit' => ''],
-            'co2' => ['label' => 'CO2', 'unit' => 'ppm'],
-            'ph' => ['label' => 'pH Tanah', 'unit' => ''],
-            'ec' => ['label' => 'EC Tanah', 'unit' => 'mS/cm'],
-        ];
-
-        // Available outputs
-        $availableOutputs = [
-            'relay' => ['label' => 'Relay', 'type' => 'boolean', 'unit' => ''],
-            'pump' => ['label' => 'Pompa Air', 'type' => 'boolean', 'unit' => ''],
-            'fan' => ['label' => 'Kipas', 'type' => 'boolean', 'unit' => ''],
-            'valve' => ['label' => 'Katup Air', 'type' => 'boolean', 'unit' => ''],
-            'dimmer' => ['label' => 'Dimmer', 'type' => 'percentage', 'unit' => '%'],
-            'servo' => ['label' => 'Servo', 'type' => 'number', 'unit' => '°'],
-        ];
-
-        // Default sensors per device type
-        $defaultSensors = [
-            'aws' => ['temperature' => 1, 'humidity' => 1, 'rainfall' => 1, 'wind_speed' => 1, 'wind_direction' => 1],
-            'greenhouse' => ['temperature' => 1, 'humidity' => 1, 'soil_moisture' => 1, 'light' => 1],
-        ];
-
-        // Default outputs per device type
-        $defaultOutputs = [
-            'aws' => [],
-            'greenhouse' => ['pump' => 1, 'fan' => 1],
-        ];
+        // Build default sensors/outputs from model
+        $defaultSensors = [];
+        $defaultOutputs = [];
+        foreach (array_keys($deviceTypes) as $type) {
+            $defaultSensors[$type] = Device::getDefaultSensorsForType($type);
+            $defaultOutputs[$type] = Device::getDefaultOutputsForType($type);
+        }
 
         return view('admin.create_device', compact('deviceTypes', 'availableSensors', 'availableOutputs', 'defaultSensors', 'defaultOutputs'));
     }
@@ -102,40 +71,19 @@ class AdminDeviceController extends Controller
     {
         $this->checkAdmin();
 
-        // A. Validasi Input
+        // A. Validasi Input - use dynamic device types from model
+        $validTypes = implode(',', array_keys(Device::getDeviceTypes()));
         $request->validate([
             'name' => 'required|string|max:100',
             'mqtt_topic' => 'required|string|max:100',
-            'type' => 'required|string|in:aws,greenhouse',
+            'type' => 'required|string|in:' . $validTypes,
             'sensors' => 'required|array|min:1',
             'sensors.*.type' => 'required|string',
         ]);
 
-        // Available sensor configs
-        $availableSensors = [
-            'temperature' => ['label' => 'Suhu', 'unit' => '°C'],
-            'humidity' => ['label' => 'Kelembaban Udara', 'unit' => '%'],
-            'soil_moisture' => ['label' => 'Kelembaban Tanah', 'unit' => '%'],
-            'rainfall' => ['label' => 'Curah Hujan', 'unit' => 'mm'],
-            'wind_speed' => ['label' => 'Kecepatan Angin', 'unit' => 'm/s'],
-            'wind_direction' => ['label' => 'Arah Angin', 'unit' => '°'],
-            'pressure' => ['label' => 'Tekanan Udara', 'unit' => 'hPa'],
-            'light' => ['label' => 'Intensitas Cahaya', 'unit' => 'lux'],
-            'uv' => ['label' => 'UV Index', 'unit' => ''],
-            'co2' => ['label' => 'CO2', 'unit' => 'ppm'],
-            'ph' => ['label' => 'pH Tanah', 'unit' => ''],
-            'ec' => ['label' => 'EC Tanah', 'unit' => 'mS/cm'],
-        ];
-
-        // Available output configs
-        $availableOutputs = [
-            'relay' => ['label' => 'Relay', 'type' => 'boolean', 'unit' => ''],
-            'pump' => ['label' => 'Pompa Air', 'type' => 'boolean', 'unit' => ''],
-            'fan' => ['label' => 'Kipas', 'type' => 'boolean', 'unit' => ''],
-            'valve' => ['label' => 'Katup Air', 'type' => 'boolean', 'unit' => ''],
-            'dimmer' => ['label' => 'Dimmer', 'type' => 'percentage', 'unit' => '%'],
-            'servo' => ['label' => 'Servo', 'type' => 'number', 'unit' => '°'],
-        ];
+        // Get sensor and output configs from Device model
+        $availableSensors = Device::getAvailableSensors();
+        $availableOutputs = Device::getAvailableOutputs();
 
         // B. Generate Token Unik & Nama Tabel
         $token = Str::random(16);
