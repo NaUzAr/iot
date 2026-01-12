@@ -428,20 +428,20 @@
             const hasSector = autoMode === 'time_days_sector';
 
             row.innerHTML = `
-            <div class="row align-items-start g-2 mb-2">
-                <div class="col-md-2">
+            <div class="row align-items-end g-3 mb-2">
+                <div class="col-md-3">
                     <label class="form-label small text-white-50">Output Type</label>
                     <select class="form-select output-select" name="outputs[${outputCounter}][type]" onchange="updateSubmitButton()">
                         ${getOutputOptions(outputKey)}
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label small text-white-50">Label</label>
+                <div class="col-md-3">
+                    <label class="form-label small text-white-50">Label (opsional)</label>
                     <input type="text" class="form-control output-label-input" name="outputs[${outputCounter}][label]" 
-                           placeholder="Label" value="${customLabel}">
+                           placeholder="Label custom" value="${customLabel}">
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label small text-white-50">Automation</label>
+                <div class="col-md-3">
+                    <label class="form-label small text-white-50">Automation Mode</label>
                     <select class="form-select" name="outputs[${outputCounter}][automation_mode]" 
                             onchange="toggleAutomationFields(${outputCounter}, this.value)">
                         <option value="none" ${autoMode === 'none' ? 'selected' : ''}>None</option>
@@ -451,29 +451,30 @@
                         <option value="sensor" ${autoMode === 'sensor' ? 'selected' : ''}>Sensor</option>
                     </select>
                 </div>
-                <div class="col-md-1 automation-time-fields" id="timeFields_${outputCounter}" style="display: ${isTimeMode ? 'block' : 'none'}">
-                    <label class="form-label small text-white-50">Slots</label>
+                <div class="col-md-3 text-end">
+                    <button type="button" class="btn btn-outline-danger" 
+                            onclick="removeOutputRow(${outputCounter})" style="border-radius: 12px;">
+                        <i class="bi bi-trash me-1"></i> Hapus
+                    </button>
+                </div>
+            </div>
+            <div class="row align-items-end g-3" id="automationRow_${outputCounter}">
+                <div class="col-md-3 automation-time-fields" id="timeFields_${outputCounter}" style="display: ${isTimeMode ? 'block' : 'none'}">
+                    <label class="form-label small text-white-50">Max Schedule Slots</label>
                     <input type="number" class="form-control" name="outputs[${outputCounter}][max_schedules]" 
                            value="${maxSchedules}" min="1" max="20">
                 </div>
-                <div class="col-md-1 automation-sector-fields" id="sectorFields_${outputCounter}" style="display: ${hasSector ? 'block' : 'none'}">
-                    <label class="form-label small text-white-50">Sectors</label>
+                <div class="col-md-3 automation-sector-fields" id="sectorFields_${outputCounter}" style="display: ${hasSector ? 'block' : 'none'}">
+                    <label class="form-label small text-white-50">Jumlah Sektor</label>
                     <input type="number" class="form-control" name="outputs[${outputCounter}][max_sectors]" 
                            value="${maxSectors}" min="1" max="10">
                 </div>
-                <div class="col-md-2 automation-sensor-fields" id="sensorSelectFields_${outputCounter}" style="display: ${autoMode === 'sensor' ? 'block' : 'none'}">
-                    <label class="form-label small text-white-50">Sensor</label>
+                <div class="col-md-4 automation-sensor-fields" id="sensorSelectFields_${outputCounter}" style="display: ${autoMode === 'sensor' ? 'block' : 'none'}">
+                    <label class="form-label small text-white-50">Pilih Sensor</label>
                     <select class="form-select automation-sensor-select" name="outputs[${outputCounter}][automation_sensor_id]">
-                        <option value="">-- Select --</option>
+                        <option value="">-- Pilih Sensor --</option>
                         ${sensorOptions}
                     </select>
-                </div>
-                <div class="col-md-2 text-end">
-                    <label class="form-label small text-white-50">&nbsp;</label>
-                    <button type="button" class="btn btn-sm btn-outline-danger d-block w-100" 
-                            onclick="removeOutputRow(${outputCounter})" style="border-radius: 12px;">
-                        <i class="bi bi-trash"></i>
-                    </button>
                 </div>
             </div>
         `;
