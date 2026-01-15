@@ -13,7 +13,7 @@ services:
       - "9001:9001"
     volumes:
       - ./docker/mosquitto.conf:/mosquitto/config/mosquitto.conf
-      - ./docker/mosquitto/certs:/mosquitto/certs:ro
+      - ./docker/mosquitto/certs:/mosquitto/certs
       - mosquitto_data:/mosquitto/data
       - mosquitto_log:/mosquitto/log
     networks:
