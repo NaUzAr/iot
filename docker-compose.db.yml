@@ -1,19 +1,20 @@
 version: '2.4'
 
-# Docker Compose untuk Database PostgreSQL
-# Jalankan: docker compose -f docker-compose.db.yml up -d
+# Docker Compose untuk Shared PostgreSQL Database
+# Jalankan: docker-compose -f docker-compose.db.yml up -d
+# Bisa digunakan untuk multiple web apps
 
 services:
   db:
     image: postgres:15-alpine
-    container_name: smartagri-db
+    container_name: shared-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: smartagri
-      POSTGRES_USER: smartagri
-      POSTGRES_PASSWORD: smartagri_secret
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_secret_2024
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - smartagri-network
     ports:

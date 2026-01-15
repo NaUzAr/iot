@@ -9,6 +9,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: smartagri-app
     container_name: smartagri-app
     restart: unless-stopped
     volumes:
@@ -19,10 +20,10 @@ services:
       - smartagri-network
     environment:
       - DB_CONNECTION=pgsql
-      - DB_HOST=smartagri-db
+      - DB_HOST=shared-db
       - DB_PORT=5432
       - DB_DATABASE=smartagri
-      - DB_USERNAME=smartagri
+      - DB_USERNAME=smartagri_user
       - DB_PASSWORD=smartagri_secret
       - MQTT_HOST=smartagri-mqtt
       - MQTT_PORT=1883
