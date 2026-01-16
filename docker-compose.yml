@@ -1,57 +1,42 @@
 version: '2.4'
 
+# SmartAgri IoT - Docker Compose
+# Menggunakan shared-db dari server-infra
+
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
+    image: smartagri-app
     container_name: smartagri-app
     restart: unless-stopped
     volumes:
       - .:/var/www
-      - ./storage:/var/www/storage
+      - smartagri_vendor:/var/www/vendor
+      - smartagri_storage:/var/www/storage
     networks:
       - smartagri-network
-    depends_on:
-      - db
     environment:
       - DB_CONNECTION=pgsql
-      - DB_HOST=db
+      - DB_HOST=shared-db
       - DB_PORT=5432
-      - DB_DATABASE=smartagri
-      - DB_USERNAME=smartagri
+      - DB_DATABASE=smartagri_db
+      - DB_USERNAME=smartagri_user
       - DB_PASSWORD=smartagri_secret
 
   nginx:
     image: nginx:alpine
     container_name: smartagri-nginx
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
+    # TIDAK ADA ports - dihandle reverse proxy
     volumes:
       - .:/var/www
       - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./docker/ssl:/etc/nginx/ssl:ro
     networks:
       - smartagri-network
     depends_on:
       - app
-
-  db:
-    image: postgres:15-alpine
-    container_name: smartagri-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: smartagri
-      POSTGRES_USER: smartagri
-      POSTGRES_PASSWORD: smartagri_secret
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - smartagri-network
-    ports:
-      - "5432:5432"
 
   mqtt:
     image: eclipse-mosquitto:2
@@ -62,7 +47,6 @@ services:
       - "9001:9001"
     volumes:
       - ./docker/mosquitto.conf:/mosquitto/config/mosquitto.conf
-      - ./docker/mosquitto/certs:/mosquitto/certs:ro
       - mosquitto_data:/mosquitto/data
       - mosquitto_log:/mosquitto/log
     networks:
@@ -70,9 +54,10 @@ services:
 
 networks:
   smartagri-network:
-    driver: bridge
+    external: true
 
 volumes:
-  postgres_data:
+  smartagri_vendor:
+  smartagri_storage:
   mosquitto_data:
   mosquitto_log:
