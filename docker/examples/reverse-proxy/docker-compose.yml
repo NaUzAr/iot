@@ -1,0 +1,28 @@
+# =============================================
+# REVERSE PROXY: Route semua domain ke Nginx masing-masing
+# =============================================
+# Folder: /root/reverse-proxy/
+# Port: 80 (HTTP), 443 (HTTPS)
+#
+# User akses → Proxy → Forward ke Nginx masing-masing
+# =============================================
+
+version: '2.4'
+
+services:
+  proxy:
+    image: nginx:alpine
+    container_name: reverse-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80" # ← Semua HTTP masuk sini
+      - "443:443" # ← Semua HTTPS masuk sini
+    volumes:
+      - ./nginx-proxy.conf:/etc/nginx/conf.d/default.conf
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - smartagri-network
+
+networks:
+  smartagri-network:
+    external: true
