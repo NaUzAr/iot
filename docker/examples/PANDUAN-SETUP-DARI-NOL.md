@@ -32,41 +32,12 @@ docker-compose --version
 
 ---
 
-## STEP 2: Buat Struktur Folder
+## STEP 2: Clone Server Infrastructure
 
 ```bash
-# Buat folder utama
-mkdir -p /root/reverse-proxy
-mkdir -p /root/shared-db
-mkdir -p /root/smartagri-iot
-mkdir -p /root/tokoonline    # Web 2 (contoh)
-
-# Lihat struktur
-tree /root/
-```
-
-Struktur akhir:
-```
-/root/
-├── reverse-proxy/           # Reverse Proxy
-│   ├── docker-compose.yml
-│   ├── nginx-proxy.conf
-│   └── ssl/                 # SSL certificates
-│
-├── shared-db/               # Database (shared)
-│   └── docker-compose.yml
-│
-├── smartagri-iot/           # Web 1
-│   ├── docker-compose.yml
-│   ├── docker/
-│   │   └── nginx.conf
-│   └── ...
-│
-└── tokoonline/              # Web 2
-    ├── docker-compose.yml
-    ├── docker/
-    │   └── nginx.conf
-    └── ...
+cd /root
+git clone https://github.com/NaUzAr/server-infra.git
+cd server-infra
 ```
 
 ---
@@ -79,75 +50,50 @@ docker network create smartagri-network
 
 ---
 
-## STEP 4: Setup Database (Shared)
+## STEP 4: Start Database (Shared)
 
 ```bash
-cd /root/shared-db
-```
-
-Buat file `docker-compose.yml`:
-```yaml
-version: '2.4'
-
-services:
-  db:
-    image: postgres:15-alpine
-    container_name: shared-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres_secret_2024
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - smartagri-network
-    ports:
-      - "5432:5432"
-
-networks:
-  smartagri-network:
-    external: true
-
-volumes:
-  postgres_data:
-```
-
-Start database:
-```bash
+cd /root/server-infra/shared-db
 docker-compose up -d
+
+# Tunggu database ready
+sleep 5
+
+# Cek running
+docker ps
 ```
 
-Buat database untuk tiap web:
+Database otomatis buat `smartagri_db` dari `init.sql`.
+
+**Tambah database baru (manual):**
 ```bash
 docker exec -it shared-db psql -U postgres
 
 # Di dalam psql:
-CREATE DATABASE smartagri_db;
-CREATE USER smartagri_user WITH ENCRYPTED PASSWORD 'smartagri_secret';
-GRANT ALL PRIVILEGES ON DATABASE smartagri_db TO smartagri_user;
-
 CREATE DATABASE tokoonline_db;
 CREATE USER tokoonline_user WITH ENCRYPTED PASSWORD 'tokoonline_secret';
 GRANT ALL PRIVILEGES ON DATABASE tokoonline_db TO tokoonline_user;
-
 \q
 ```
 
 ---
 
-## STEP 5: Setup Web 1 (SmartAgri)
+## STEP 5: Clone Web App(s)
 
 ```bash
-cd /root/smartagri-iot
+# Web 1: SmartAgri
+cd /root
+git clone https://github.com/NaUzAr/smartagri-iot.git
+cd smartagri-iot
 
-# Clone project
-git clone https://github.com/NaUzAr/smartagri-iot.git .
-
-# Atau pull jika sudah ada
-git pull origin main
+# Edit docker-compose jika perlu
+# Pastikan:
+# - network: smartagri-network (external: true)
+# - nginx: TIDAK ada ports
+# - DB_HOST: shared-db
 ```
 
-Buat `docker-compose.yml`:
+**Contoh docker-compose.yml untuk web:**
 ```yaml
 version: '2.4'
 
@@ -156,7 +102,6 @@ services:
     build: .
     image: smartagri-app
     container_name: smartagri-app
-    restart: unless-stopped
     volumes:
       - .:/var/www
       - smartagri_vendor:/var/www/vendor
@@ -172,8 +117,7 @@ services:
   nginx:
     image: nginx:alpine
     container_name: smartagri-nginx
-    restart: unless-stopped
-    # TIDAK ADA ports - hanya internal
+    # ❌ TIDAK ADA ports - internal only
     volumes:
       - .:/var/www
       - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
@@ -191,112 +135,41 @@ volumes:
   smartagri_storage:
 ```
 
-Build & Start:
+---
+
+## STEP 6: Build & Start Web App
+
 ```bash
+cd /root/smartagri-iot
+
+# Build
 docker-compose build
+
+# Start
 docker-compose up -d
 
 # Setup Laravel
 docker exec smartagri-app cp .env.example .env
 docker exec smartagri-app php artisan key:generate
 docker exec smartagri-app php artisan migrate --force
+
+# Fix permissions
+docker exec smartagri-app chmod -R 775 /var/www/storage
+docker exec smartagri-app chown -R www-data:www-data /var/www/storage
 ```
 
 ---
 
-## STEP 6: Setup Web 2 (Toko Online) - SAMA seperti Web 1
+## STEP 7: Tambah Domain ke Reverse Proxy
+
+Edit `nginx.conf` di server-infra:
 
 ```bash
-cd /root/tokoonline
-git clone https://github.com/xxx/tokoonline.git .
+nano /root/server-infra/reverse-proxy/nginx.conf
 ```
 
-Buat `docker-compose.yml` (BEDA: nama container & DB):
-```yaml
-version: '2.4'
-
-services:
-  app:
-    build: .
-    image: tokoonline-app           # ← BEDA
-    container_name: tokoonline-app  # ← BEDA
-    restart: unless-stopped
-    volumes:
-      - .:/var/www
-      - tokoonline_vendor:/var/www/vendor    # ← BEDA
-      - tokoonline_storage:/var/www/storage
-    networks:
-      - smartagri-network
-    environment:
-      - DB_HOST=shared-db
-      - DB_DATABASE=tokoonline_db        # ← BEDA
-      - DB_USERNAME=tokoonline_user      # ← BEDA
-      - DB_PASSWORD=tokoonline_secret    # ← BEDA
-
-  nginx:
-    image: nginx:alpine
-    container_name: tokoonline-nginx     # ← BEDA
-    restart: unless-stopped
-    volumes:
-      - .:/var/www
-      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
-    networks:
-      - smartagri-network
-    depends_on:
-      - app
-
-networks:
-  smartagri-network:
-    external: true
-
-volumes:
-  tokoonline_vendor:     # ← BEDA
-  tokoonline_storage:
-```
-
-Build & Start:
-```bash
-docker-compose build
-docker-compose up -d
-docker exec tokoonline-app cp .env.example .env
-docker exec tokoonline-app php artisan key:generate
-docker exec tokoonline-app php artisan migrate --force
-```
-
----
-
-## STEP 7: Setup Reverse Proxy
-
-```bash
-cd /root/reverse-proxy
-```
-
-Buat `docker-compose.yml`:
-```yaml
-version: '2.4'
-
-services:
-  proxy:
-    image: nginx:alpine
-    container_name: reverse-proxy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx-proxy.conf:/etc/nginx/conf.d/default.conf
-      - ./ssl:/etc/nginx/ssl:ro
-    networks:
-      - smartagri-network
-
-networks:
-  smartagri-network:
-    external: true
-```
-
-Buat `nginx-proxy.conf`:
+Tambah server block:
 ```nginx
-# Web 1: smartagri.web.id
 server {
     listen 80;
     server_name smartagri.web.id www.smartagri.web.id;
@@ -310,60 +183,33 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
-
-# Web 2: tokoonline.com
-server {
-    listen 80;
-    server_name tokoonline.com www.tokoonline.com;
-
-    location / {
-        proxy_pass http://tokoonline-nginx:80;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
 ```
 
-Start:
+---
+
+## STEP 8: Start Reverse Proxy
+
 ```bash
+cd /root/server-infra/reverse-proxy
 docker-compose up -d
 ```
 
 ---
 
-## STEP 8: Verifikasi
+## STEP 9: Verifikasi
 
 ```bash
 # Cek semua container running
 docker ps
 
+# Seharusnya ada:
+# - shared-db
+# - smartagri-app
+# - smartagri-nginx
+# - reverse-proxy
+
 # Test akses
 curl -I http://smartagri.web.id
-curl -I http://tokoonline.com
-```
-
----
-
-## STEP 9: Setup SSL (Opsional)
-
-```bash
-# Install Certbot
-apt install certbot -y
-
-# Generate SSL
-certbot certonly --standalone -d smartagri.web.id
-certbot certonly --standalone -d tokoonline.com
-
-# Copy ke folder
-cp /etc/letsencrypt/live/smartagri.web.id/fullchain.pem /root/reverse-proxy/ssl/smartagri/
-cp /etc/letsencrypt/live/smartagri.web.id/privkey.pem /root/reverse-proxy/ssl/smartagri/
-
-# Update nginx-proxy.conf untuk HTTPS
-# Restart
-docker-compose restart
 ```
 
 ---
@@ -374,38 +220,133 @@ docker-compose restart
 # 1. Network
 docker network create smartagri-network
 
-# 2. Database
-cd /root/shared-db && docker-compose up -d
+# 2. Clone server-infra
+cd /root
+git clone https://github.com/NaUzAr/server-infra.git
 
-# 3. Web 1
-cd /root/smartagri-iot && docker-compose up -d
+# 3. Database
+cd /root/server-infra/shared-db
+docker-compose up -d
 
-# 4. Web 2
-cd /root/tokoonline && docker-compose up -d
+# 4. Clone & start web
+cd /root
+git clone https://github.com/NaUzAr/smartagri-iot.git
+cd smartagri-iot
+docker-compose up -d
 
-# 5. Reverse Proxy (TERAKHIR)
-cd /root/reverse-proxy && docker-compose up -d
+# 5. Edit nginx config
+nano /root/server-infra/reverse-proxy/nginx.conf
+
+# 6. Start reverse proxy (TERAKHIR)
+cd /root/server-infra/reverse-proxy
+docker-compose up -d
 ```
 
 ---
 
-## Troubleshooting:
+## Tambah Web Baru:
+
+### 1. Buat database
+```bash
+docker exec -it shared-db psql -U postgres
+CREATE DATABASE newweb_db;
+CREATE USER newweb_user WITH ENCRYPTED PASSWORD 'newweb_secret';
+GRANT ALL PRIVILEGES ON DATABASE newweb_db TO newweb_user;
+\q
+```
+
+### 2. Clone project
+```bash
+cd /root
+git clone https://github.com/xxx/newweb.git
+cd newweb
+docker-compose up -d
+```
+
+### 3. Tambah domain
+```bash
+nano /root/server-infra/reverse-proxy/nginx.conf
+# Tambah server block baru
+```
+
+### 4. Reload proxy
+```bash
+docker exec reverse-proxy nginx -s reload
+```
+
+---
+
+## Setup SSL (Let's Encrypt)
+
+```bash
+# Install certbot
+apt install certbot -y
+
+# Stop reverse proxy 
+cd /root/server-infra/reverse-proxy
+docker-compose down
+
+# Generate certificate
+certbot certonly --standalone -d smartagri.web.id
+
+# Copy ke folder ssl
+mkdir -p ssl/smartagri
+cp /etc/letsencrypt/live/smartagri.web.id/fullchain.pem ssl/smartagri/
+cp /etc/letsencrypt/live/smartagri.web.id/privkey.pem ssl/smartagri/
+
+# Update nginx.conf untuk HTTPS (lihat template di file)
+
+# Start reverse proxy
+docker-compose up -d
+```
+
+---
+
+## Troubleshooting
 
 ### Container restart terus
 ```bash
 docker logs [container_name] --tail 50
 ```
 
-### Tidak bisa connect ke database
-- Pastikan network sama
-- Cek DB_HOST=shared-db (bukan localhost)
-
 ### 502 Bad Gateway
-- Pastikan container app sudah running
-- Cek nama container di proxy_pass sama dengan container_name
+- Pastikan container nginx web sudah running
+- Cek nama container di `proxy_pass` sama dengan `container_name`
+
+### Database connection refused
+- Pastikan `DB_HOST=shared-db` (bukan localhost)
+- Pastikan network sama (`smartagri-network`)
 
 ### Permission denied storage
 ```bash
 docker exec [app_container] chmod -R 775 /var/www/storage
 docker exec [app_container] chown -R www-data:www-data /var/www/storage
+```
+
+### SSL Certificate error
+- Pastikan file *.pem ada di folder `ssl/[domain]/`
+- Cek path di nginx.conf benar
+
+---
+
+## Struktur Akhir di Server:
+
+```
+/root/
+├── server-infra/           # Clone dari GitHub
+│   ├── reverse-proxy/
+│   │   ├── docker-compose.yml
+│   │   ├── nginx.conf      # ← Edit untuk tambah domain
+│   │   └── ssl/
+│   └── shared-db/
+│       ├── docker-compose.yml
+│       └── init.sql
+│
+├── smartagri-iot/          # Web 1
+│   ├── docker-compose.yml
+│   └── ...
+│
+└── tokoonline/             # Web 2
+    ├── docker-compose.yml
+    └── ...
 ```
