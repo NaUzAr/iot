@@ -1,0 +1,59 @@
+# ========================================
+# TEMPLATE: docker-compose.app.yml
+# ========================================
+# Copy file ini untuk setiap web baru
+#
+# YANG PERLU DIUBAH:
+# 1. image: [NAMA_PROJECT]-app
+# 2. container_name: [NAMA_PROJECT]-app  
+# 3. volumes: [NAMA_PROJECT]_vendor, [NAMA_PROJECT]_storage
+# 4. DB_DATABASE: [NAMA_DATABASE]
+# 5. DB_USERNAME: [USERNAME_DATABASE]
+# 6. DB_PASSWORD: [PASSWORD_DATABASE]
+# ========================================
+
+version: '2.4'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # ⬇️ UBAH: Nama image (ganti "webname" dengan nama project)
+    image: webname-app
+
+    # ⬇️ UBAH: Nama container (harus unik)
+    container_name: webname-app
+
+    restart: unless-stopped
+
+    volumes:
+      - .:/var/www
+      # ⬇️ UBAH: Nama volume (ganti "webname")
+      - webname_vendor:/var/www/vendor
+      - webname_storage:/var/www/storage
+
+    networks:
+      - smartagri-network # Pakai network yang sama
+
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=shared-db # Sama untuk semua web
+      - DB_PORT=5432
+      # ⬇️ UBAH: Credentials database
+      - DB_DATABASE=webname_db
+      - DB_USERNAME=webname_user
+      - DB_PASSWORD=webname_secret
+      # Optional: MQTT (jika digunakan)
+      - MQTT_HOST=smartagri-mqtt
+      - MQTT_PORT=1883
+
+networks:
+  smartagri-network:
+    external: true # Connect ke network existing
+
+volumes:
+  # ⬇️ UBAH: Nama volume (ganti "webname")
+  webname_vendor:
+  webname_storage:
