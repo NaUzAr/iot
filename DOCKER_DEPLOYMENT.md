@@ -1,67 +1,39 @@
-# 🐳 Panduan Deploy Multi-Website Laravel dengan Docker + Cloudflare
+# 🐳 Docker Deployment Guide - SmartAgri IoT
 
-Panduan untuk deploy **multiple Laravel websites** ke **satu VPS** menggunakan **Docker** dan **Cloudflare** untuk SSL.
-
-## 📋 Overview Arsitektur
-
-```
-         User ──▶ Cloudflare (HTTPS) ──▶ VPS Nginx (HTTP) ──▶ Laravel Containers
-```
+Panduan step-by-step deploy multi-website Laravel ke VPS dengan Docker.
 
 ---
 
-## 📁 Struktur Folder di VPS
+## 📋 STEP 1: Setup VPS
 
-```
-/opt/docker-apps/
-├── nginx-proxy/           # Reverse proxy
-│   ├── docker-compose.yml
-│   └── nginx.conf
-├── forlizz/               # Project 1
-│   ├── docker-compose.yml
-│   ├── Dockerfile
-│   ├── nginx.conf
-│   └── src/
-├── smartagri/             # Project 2
-│   └── ... (sama seperti forlizz)
-└── postgres/              # Shared database
-    └── docker-compose.yml
-```
-
----
-
-## ☁️ BAGIAN 1: Setup Cloudflare
-
-1. **Add domain di Cloudflare Dashboard**
-2. **Ubah nameserver di domain registrar**
-3. **Set DNS Records:**
-
-| Type | Name | Content | Proxy |
-|------|------|---------|-------|
-| A | @ | 203.194.115.76 | ☁️ Proxied |
-| A | www | 203.194.115.76 | ☁️ Proxied |
-
-4. **SSL/TLS → Pilih "Flexible"**
-
----
-
-## 🔧 BAGIAN 2: Setup VPS
-
+### 1.1 Login & Update System
 ```bash
-ssh root@IP_VPS
+ssh root@203.194.115.76
 apt update && apt upgrade -y
+```
+
+### 1.2 Install Docker
+```bash
 curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
 apt install docker-compose-plugin -y
+```
+
+### 1.3 Buat Struktur Folder & Network
+```bash
 mkdir -p /opt/docker-apps/{nginx-proxy,forlizz/src,smartagri/src,postgres}
 docker network create webapps
 ```
 
 ---
 
-## 🗄️ BAGIAN 3: Setup PostgreSQL
+## 📋 STEP 2: Setup PostgreSQL
 
-File: `/opt/docker-apps/postgres/docker-compose.yml`
+### 2.1 Buat docker-compose.yml
+```bash
+nano /opt/docker-apps/postgres/docker-compose.yml
+```
 
+**Isi file:**
 ```yaml
 services:
   postgres:
@@ -70,14 +42,12 @@ services:
     restart: always
     environment:
       POSTGRES_USER: webadmin
-      POSTGRES_PASSWORD: password_kuat_anda
+      POSTGRES_PASSWORD: Rizal1234
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-databases.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - webapps
-    ports:
-      - "5432:5432"
 
 volumes:
   postgres_data:
@@ -87,8 +57,12 @@ networks:
     external: true
 ```
 
-File: `/opt/docker-apps/postgres/init-databases.sql`
+### 2.2 Buat init-databases.sql
+```bash
+nano /opt/docker-apps/postgres/init-databases.sql
+```
 
+**Isi file:**
 ```sql
 CREATE DATABASE db_forlizz;
 CREATE DATABASE db_smartagri;
@@ -96,26 +70,39 @@ GRANT ALL PRIVILEGES ON DATABASE db_forlizz TO webadmin;
 GRANT ALL PRIVILEGES ON DATABASE db_smartagri TO webadmin;
 ```
 
+### 2.3 Start PostgreSQL
 ```bash
 cd /opt/docker-apps/postgres && docker compose up -d
 ```
 
 ---
 
-## 🌐 BAGIAN 4: Nginx Reverse Proxy (HTTP Only - Cloudflare handles SSL)
+## 📋 STEP 3: Setup Forlizz (Birthday Project)
 
-File: `/opt/docker-apps/nginx-proxy/docker-compose.yml`
+### 3.1 Buat Dockerfile
+```bash
+nano /opt/docker-apps/forlizz/Dockerfile
+```
 
+**Isi file:**
+```dockerfile
+FROM nginx:alpine
+COPY src/ /usr/share/nginx/html/
+EXPOSE 80
+```
+
+### 3.2 Buat docker-compose.yml
+```bash
+nano /opt/docker-apps/forlizz/docker-compose.yml
+```
+
+**Isi file:**
 ```yaml
 services:
-  nginx-proxy:
-    image: nginx:alpine
-    container_name: nginx_proxy
+  app:
+    build: .
+    container_name: forlizz_app
     restart: always
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     networks:
       - webapps
 
@@ -124,92 +111,87 @@ networks:
     external: true
 ```
 
-File: `/opt/docker-apps/nginx-proxy/nginx.conf`
+### 3.3 Clone Source Code
+```bash
+cd /opt/docker-apps/forlizz/src
+git clone https://github.com/NaUzAr/forlizz.git .
+```
 
-```nginx
-events {
-    worker_connections 1024;
-}
-http {
-    access_log /var/log/nginx/access.log;
-    error_log /var/log/nginx/error.log;
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript;
-
-    # forlizz.online
-    server {
-        listen 80;
-        server_name forlizz.online www.forlizz.online;
-        location / {
-            proxy_pass http://forlizz_app:80;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-    }
-
-    # smartagri.web.id
-    server {
-        listen 80;
-        server_name smartagri.web.id www.smartagri.web.id;
-        location / {
-            proxy_pass http://smartagri_app:80;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-    }
-}
+### 3.4 Build & Start
+```bash
+cd /opt/docker-apps/forlizz && docker compose up -d --build
 ```
 
 ---
 
-## 📦 BAGIAN 5: Laravel Container
+## 📋 STEP 4: Setup SmartAgri (Laravel Project)
 
-### Dockerfile
+### 4.1 Buat Dockerfile
+```bash
+nano /opt/docker-apps/smartagri/Dockerfile
+```
 
+**Isi file:**
 ```dockerfile
-FROM php:8.4-fpm-alpine
+FROM php:8.2-fpm-alpine
 
 RUN apk add --no-cache nginx supervisor libpng-dev libzip-dev postgresql-dev \
     && docker-php-ext-install pdo pdo_pgsql zip gd bcmath
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY nginx.conf /etc/nginx/http.d/default.conf
+
 RUN mkdir -p /etc/supervisor.d
 COPY supervisord.ini /etc/supervisor.d/supervisord.ini
 
 WORKDIR /var/www/html
 COPY src/ /var/www/html/
-RUN composer install --optimize-autoloader --no-dev
+
+RUN composer install --optimize-autoloader --no-dev --no-interaction
+
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
 
 EXPOSE 80
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
 ```
 
-### nginx.conf (Internal)
+### 4.2 Buat nginx.conf
+```bash
+nano /opt/docker-apps/smartagri/nginx.conf
+```
 
+**Isi file:**
 ```nginx
 server {
     listen 80;
     server_name _;
     root /var/www/html/public;
     index index.php;
-    location / { try_files $uri $uri/ /index.php?$query_string; }
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
     location ~ \.php$ {
         fastcgi_pass 127.0.0.1:9000;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
     }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
 }
 ```
 
-### supervisord.ini
+### 4.3 Buat supervisord.ini
+```bash
+nano /opt/docker-apps/smartagri/supervisord.ini
+```
 
+**Isi file:**
 ```ini
 [supervisord]
 nodaemon=true
@@ -225,23 +207,31 @@ autostart=true
 autorestart=true
 ```
 
-### docker-compose.yml
+### 4.4 Buat docker-compose.yml
+```bash
+nano /opt/docker-apps/smartagri/docker-compose.yml
+```
 
+**Isi file:**
 ```yaml
 services:
   app:
     build: .
-    container_name: forlizz_app  # atau smartagri_app
+    container_name: smartagri_app
     restart: always
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: https://forlizz.online
+      APP_KEY: base64:YOUR_APP_KEY_HERE
+      APP_URL: https://smartagri.web.id
       DB_CONNECTION: pgsql
       DB_HOST: shared_postgres
-      DB_DATABASE: db_forlizz
+      DB_PORT: 5432
+      DB_DATABASE: db_smartagri
       DB_USERNAME: webadmin
-      DB_PASSWORD: password_kuat_anda
+      DB_PASSWORD: Rizal1234
+    volumes:
+      - ./src/storage:/var/www/html/storage
     networks:
       - webapps
 
@@ -250,73 +240,254 @@ networks:
     external: true
 ```
 
----
-
-## 🚀 BAGIAN 6: Deploy
-
+### 4.5 Clone Source Code
 ```bash
-# Upload source
-scp -r "D:\path\to\project\*" root@IP_VPS:/opt/docker-apps/forlizz/src/
+cd /opt/docker-apps/smartagri/src
+git clone https://github.com/NaUzAr/web2.git .
+```
 
-# Start services
-cd /opt/docker-apps/postgres && docker compose up -d
-cd /opt/docker-apps/forlizz && docker compose up -d --build
-cd /opt/docker-apps/nginx-proxy && docker compose up -d
+### 4.6 Build & Start
+```bash
+cd /opt/docker-apps/smartagri && docker compose up -d --build
+```
 
-# Migrations
-docker exec forlizz_app php artisan key:generate
-docker exec forlizz_app php artisan migrate --force
-docker exec forlizz_app php artisan storage:link
+### 4.7 Run Laravel Setup
+```bash
+docker exec smartagri_app php artisan key:generate
+docker exec smartagri_app php artisan migrate --force
+docker exec smartagri_app php artisan storage:link
 ```
 
 ---
 
-## ➕ BAGIAN 7: Tambah Website Baru
+## 📋 STEP 5: Setup Nginx Reverse Proxy
+
+### 5.1 Buat docker-compose.yml
+```bash
+nano /opt/docker-apps/nginx-proxy/docker-compose.yml
+```
+
+**Isi file:**
+```yaml
+services:
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+      - ./html:/usr/share/nginx/html:ro
+    networks:
+      - webapps
+
+networks:
+  webapps:
+    external: true
+```
+
+### 5.2 Buat nginx.conf (HTTP Only - Sementara)
+```bash
+nano /opt/docker-apps/nginx-proxy/nginx.conf
+```
+
+**Isi file:**
+```nginx
+events {
+    worker_connections 1024;
+}
+
+http {
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    # forlizz.online
+    server {
+        listen 80;
+        server_name forlizz.online www.forlizz.online;
+        
+        location /.well-known/acme-challenge/ {
+            root /usr/share/nginx/html;
+        }
+        
+        location / {
+            proxy_pass http://forlizz_app:80;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+
+    # smartagri.web.id
+    server {
+        listen 80;
+        server_name smartagri.web.id www.smartagri.web.id;
+        
+        location /.well-known/acme-challenge/ {
+            root /usr/share/nginx/html;
+        }
+        
+        location / {
+            proxy_pass http://smartagri_app:80;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+}
+```
+
+### 5.3 Start Nginx Proxy
+```bash
+mkdir -p /opt/docker-apps/nginx-proxy/html/.well-known/acme-challenge
+cd /opt/docker-apps/nginx-proxy && docker compose up -d
+```
+
+---
+
+## 📋 STEP 6: Setup SSL (HTTPS)
+
+### 6.1 Generate SSL untuk forlizz.online
+```bash
+docker run -it --rm \
+  -v /opt/docker-apps/nginx-proxy/certs:/etc/letsencrypt \
+  -v /opt/docker-apps/nginx-proxy/html:/usr/share/nginx/html \
+  certbot/certbot certonly --webroot \
+  -w /usr/share/nginx/html \
+  -d forlizz.online -d www.forlizz.online \
+  --email rizal@email.com --agree-tos --no-eff-email
+```
+
+### 6.2 Generate SSL untuk smartagri.web.id
+```bash
+docker run -it --rm \
+  -v /opt/docker-apps/nginx-proxy/certs:/etc/letsencrypt \
+  -v /opt/docker-apps/nginx-proxy/html:/usr/share/nginx/html \
+  certbot/certbot certonly --webroot \
+  -w /usr/share/nginx/html \
+  -d smartagri.web.id -d www.smartagri.web.id \
+  --email rizal@email.com --agree-tos --no-eff-email
+```
+
+### 6.3 Update nginx.conf dengan HTTPS
+```bash
+nano /opt/docker-apps/nginx-proxy/nginx.conf
+```
+
+**Isi file baru:**
+```nginx
+events {
+    worker_connections 1024;
+}
+
+http {
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    # forlizz.online - Redirect HTTP ke HTTPS
+    server {
+        listen 80;
+        server_name forlizz.online www.forlizz.online;
+        location /.well-known/acme-challenge/ { root /usr/share/nginx/html; }
+        location / { return 301 https://$host$request_uri; }
+    }
+
+    # forlizz.online - HTTPS
+    server {
+        listen 443 ssl;
+        server_name forlizz.online www.forlizz.online;
+        ssl_certificate /etc/nginx/certs/live/forlizz.online/fullchain.pem;
+        ssl_certificate_key /etc/nginx/certs/live/forlizz.online/privkey.pem;
+        
+        location / {
+            proxy_pass http://forlizz_app:80;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+
+    # smartagri.web.id - Redirect HTTP ke HTTPS
+    server {
+        listen 80;
+        server_name smartagri.web.id www.smartagri.web.id;
+        location /.well-known/acme-challenge/ { root /usr/share/nginx/html; }
+        location / { return 301 https://$host$request_uri; }
+    }
+
+    # smartagri.web.id - HTTPS
+    server {
+        listen 443 ssl;
+        server_name smartagri.web.id www.smartagri.web.id;
+        ssl_certificate /etc/nginx/certs/live/smartagri.web.id/fullchain.pem;
+        ssl_certificate_key /etc/nginx/certs/live/smartagri.web.id/privkey.pem;
+        
+        location / {
+            proxy_pass http://smartagri_app:80;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+}
+```
+
+### 6.4 Restart Nginx
+```bash
+cd /opt/docker-apps/nginx-proxy && docker compose restart
+```
+
+---
+
+## 🔧 Commands Berguna
 
 ```bash
-# 1. Tambah DNS di Cloudflare (A record → IP VPS, Proxied)
-# 2. Buat database
-docker exec -it shared_postgres psql -U webadmin -c "CREATE DATABASE db_newsite;"
+# Lihat semua container
+docker ps
 
-# 3. Copy template & edit docker-compose.yml
-mkdir -p /opt/docker-apps/newsite/src
-cp /opt/docker-apps/forlizz/{Dockerfile,nginx.conf,supervisord.ini} /opt/docker-apps/newsite/
+# Lihat logs
+docker logs forlizz_app
+docker logs smartagri_app
+docker logs nginx_proxy
 
-# 4. Tambah server block di nginx-proxy/nginx.conf
-# 5. Build & deploy
-docker compose up -d --build
+# Masuk ke container
+docker exec -it smartagri_app sh
+
+# Rebuild setelah update
+cd /opt/docker-apps/smartagri && docker compose up -d --build
+
+# Clear Laravel cache
+docker exec smartagri_app php artisan cache:clear
+docker exec smartagri_app php artisan config:clear
 ```
 
 ---
 
 ## 🆘 Troubleshooting
 
-### 403 Forbidden
+### Error 502 Bad Gateway
 ```bash
-docker exec app_name chmod -R 755 /var/www/html/public
-docker exec app_name chown -R www-data:www-data /var/www/html/public
+# Cek container running
+docker ps
+
+# Cek logs nginx
+docker logs nginx_proxy
 ```
 
-### .env / APP_KEY Missing
+### Error Permission Denied
 ```bash
-docker exec app_name sh -c 'echo "APP_NAME=Laravel
-APP_ENV=production
-APP_KEY=
-DB_CONNECTION=pgsql
-DB_HOST=shared_postgres
-DB_DATABASE=db_name
-DB_USERNAME=webadmin
-DB_PASSWORD=password" > .env'
-docker exec app_name php artisan key:generate
+docker exec smartagri_app chown -R www-data:www-data /var/www/html/storage
+docker exec smartagri_app chmod -R 755 /var/www/html/storage
 ```
 
----
-
-## 🛠️ Commands Berguna
-
+### Error Database Connection
 ```bash
-docker ps                    # Lihat containers
-docker logs app_name         # Lihat logs
-docker exec -it app_name sh  # Masuk container
-docker compose up -d --build # Rebuild
+# Cek postgres running
+docker logs shared_postgres
+
+# Test koneksi
+docker exec smartagri_app php artisan migrate:status
 ```
